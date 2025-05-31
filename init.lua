@@ -91,7 +91,7 @@ vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
 -- Set to true if you have a Nerd Font installed and selected in the terminal
-vim.g.have_nerd_font = false
+vim.g.have_nerd_font = true
 
 -- [[ Setting options ]]
 -- See `:help vim.o`
@@ -102,7 +102,7 @@ vim.g.have_nerd_font = false
 vim.o.number = true
 -- You can also add relative line numbers, to help with jumping.
 --  Experiment for yourself to see if you like it!
--- vim.o.relativenumber = true
+vim.o.relativenumber = true
 
 -- Enable mouse mode, can be useful for resizing splits for example!
 vim.o.mouse = 'a'
@@ -114,9 +114,40 @@ vim.o.showmode = false
 --  Schedule the setting after `UiEnter` because it can increase startup-time.
 --  Remove this option if you want your OS clipboard to remain independent.
 --  See `:help 'clipboard'`
-vim.schedule(function()
+--[[vim.schedule(function()
   vim.o.clipboard = 'unnamedplus'
-end)
+end)--]]
+
+vim.keymap.set('n', '<leader>p', '"+p', { desc = 'Paste system clipboard below current line' })
+vim.keymap.set('n', '<leader>P', '"+P', { desc = 'Paste system clipboard above current line' })
+vim.keymap.set('v', '<leader>p', '"+p', { desc = 'Paste system clipboard below current line' })
+vim.keymap.set('v', '<leader>P', '"+P', { desc = 'Paste system clipboard above current line' })
+
+--[[
+This should work for pasting under/above cursor 
+
+vim.keymap.set('n', '<leader>p', '"o<Esc>+p', { desc = 'Paste system clipboard below current line' })
+vim.keymap.set('n', '<leader>P', '"O<Esc>+P', { desc = 'Paste system clipboard above current line' })
+vim.keymap.set('v', '<leader>p', '"o<Esc>+p', { desc = 'Paste system clipboard below current line' })
+vim.keymap.set('v', '<leader>P', '"O<Esc>+P', { desc = 'Paste system clipboard above current line' })
+]]
+--
+
+vim.keymap.set('n', '<leader>yy', '"+yy', { desc = 'Copy to system clipboard' })
+vim.keymap.set('v', '<leader>y', '"+y', { desc = 'Copy to system clipboard' })
+
+-- In all modes, swap the functionality
+vim.keymap.set({ 'i', 'n', 'v' }, '<C-c>', '<Esc>')
+vim.keymap.set({ 'i', 'n', 'v' }, '<Esc>', '<C-c>')
+
+-- Or if you want to be more specific:
+vim.keymap.set('i', '<C-c>', '<Esc>') -- Ctrl-C exits insert mode properly
+vim.keymap.set('n', '<C-c>', '<Esc>') -- Ctrl-C cancels operations
+vim.keymap.set('v', '<C-c>', '<Esc>') -- Ctrl-C exits visual mode
+
+vim.keymap.set('i', '<Esc>', '<C-c>') -- Esc interrupts
+vim.keymap.set('n', '<Esc>', '<C-c>') -- Esc interrupts
+vim.keymap.set('v', '<Esc>', '<C-c>') -- Esc interrupts
 
 -- Enable break indent
 vim.o.breakindent = true
@@ -249,6 +280,13 @@ require('lazy').setup({
   -- NOTE: Plugins can be added with a link (or for a github repo: 'owner/repo' link).
   'NMAC427/guess-indent.nvim', -- Detect tabstop and shiftwidth automatically
 
+  --Harpoon and dependency - allows you to pin frequently used files
+  'nvim-lua/plenary.nvim',
+  'ThePrimeagen/harpoon',
+
+  --Fugitive - allows you to use git inside of neovim
+  'tpope/vim-fugitive',
+
   -- NOTE: Plugins can also be added by using a table,
   -- with the first argument being the link and the following
   -- keys can be used to configure plugin behavior/loading/etc.
@@ -284,6 +322,134 @@ require('lazy').setup({
     },
   },
 
+  --recommended to have by DAP
+  {
+    'folke/lazydev.nvim',
+    ft = 'lua', -- optional: only load when editing Lua
+    opts = {
+      library = {
+        -- add plugins here if you want extra API support
+        -- auto-detects if using Lazy
+        plugins = { 'nvim-dap-ui' },
+      },
+    },
+  },
+
+  { --Floating message buffer
+    'AckslD/messages.nvim',
+    config = function()
+      require('messages').setup()
+
+      vim.api.nvim_create_user_command('Msgs', function()
+        require('messages').show()
+      end, {})
+
+      -- Keymap <leader>m to show messages
+      vim.keymap.set('n', '<leader>m', function()
+        vim.cmd 'Messages messages'
+      end, { desc = 'Show Messages Float' })
+    end,
+  },
+
+  --Debugger + requirements
+  --  require('neodev').setup {
+  --    library = { plugins = { 'nvim-dap-ui' }, types = true },
+  --  }
+
+  {
+    'mfussenegger/nvim-dap',
+    dependencies = {
+      'rcarriga/nvim-dap-ui',
+      'theHamsta/nvim-dap-virtual-text',
+      'nvim-neotest/nvim-nio',
+    },
+    config = function()
+      local dap = require 'dap'
+      local dapui = require 'dapui'
+
+      -- Setup UI
+      dapui.setup()
+      require('nvim-dap-virtual-text').setup()
+
+      -- Auto open/close UI
+      dap.listeners.after.event_initialized['dapui_config'] = function()
+        dapui.open()
+      end
+      dap.listeners.before.event_terminated['dapui_config'] = function()
+        dapui.close()
+      end
+      dap.listeners.before.event_exited['dapui_config'] = function()
+        dapui.close()
+      end
+
+      -- C# adapter config
+      dap.adapters.coreclr = {
+        type = 'executable',
+        command = vim.fn.stdpath 'data' .. '\\mason\\packages\\netcoredbg\\netcoredbg\\netcoredbg.exe',
+        args = { '--interpreter=vscode' },
+      }
+
+      dap.configurations.cs = {
+        {
+          type = 'coreclr',
+          name = 'Launch .NET Core App',
+          request = 'launch',
+          program = function()
+            -- Find .csproj file
+            local project_file = vim.fn.glob(vim.fn.getcwd() .. '/*.csproj')
+            if project_file == '' then
+              error 'No .csproj file found in current directory!'
+            end
+
+            -- Build the project
+            vim.fn.system { 'dotnet', 'build', project_file }
+
+            -- Use dotnet CLI to figure out output path
+            local dll_name = vim.fn.fnamemodify(project_file, ':t:r') .. '.dll'
+            local dll_path = vim.fn.getcwd() .. '\\bin\\Debug\\net8.0\\' .. dll_name
+
+            if vim.fn.filereadable(dll_path) == 0 then
+              error('DLL not found: ' .. dll_path)
+            end
+
+            local build_output = vim.fn.system { 'dotnet', 'build', project_file }
+            print(build_output)
+
+            return dll_path
+          end,
+          cwd = '${workspaceFolder}',
+          stopAtEntry = false,
+        },
+      }
+
+      -- Keymaps
+      vim.keymap.set('n', '<F5>', dap.continue, { desc = 'Start/Continue Debug' })
+      vim.keymap.set('n', '<F9>', dap.toggle_breakpoint, { desc = 'Toggle Breakpoint' })
+      vim.keymap.set('n', '<F10>', dap.step_over, { desc = 'Step Over' })
+      vim.keymap.set('n', '<F11>', dap.step_into, { desc = 'Step Into' })
+      vim.keymap.set('n', '<S-F11>', dap.step_out, { desc = 'Step Out' })
+      vim.keymap.set('n', '<leader>dr', dap.repl.open, { desc = 'Open REPL' })
+      vim.keymap.set('n', '<leader>du', dapui.toggle, { desc = 'Toggle Debug UI' })
+    end,
+  },
+
+  {
+    'lukas-reineke/indent-blankline.nvim',
+    main = 'ibl',
+    config = function()
+      require('ibl').setup {
+        indent = {
+          char = '│',
+          tab_char = '│',
+        },
+        scope = {
+          enabled = true,
+          show_start = true,
+          show_end = true,
+        },
+      }
+    end,
+  },
   -- NOTE: Plugins can also be configured to run Lua code when they are loaded.
   --
   -- This is often very useful to both group configuration, as well as handle
@@ -413,6 +579,31 @@ require('lazy').setup({
         --   },
         -- },
         -- pickers = {}
+        pickers = {
+          find_files = {
+            mappings = {
+              n = {
+                ['cd'] = function(prompt_bufnr)
+                  local selection = require('telescope.actions.state').get_selected_entry()
+                  local dir = vim.fn.fnamemodify(selection.path, ':p:h')
+                  require('telescope.actions').close(prompt_bufnr)
+                  -- Depending on what you want put `cd`, `lcd`, `tcd`
+                  vim.cmd(string.format('silent lcd %s', dir))
+                end,
+                -- Same mappings for normal mode within telescope
+                ['<esc>'] = require('telescope.actions').close,
+                ['<C-c>'] = { '<esc>', type = 'command' },
+              },
+              i = {
+                -- Remove the <C-c> mapping to allow default behavior (go to normal mode)
+                -- ['<C-c>'] = require('telescope.actions').to_normal_mode, -- This line causes the issue
+                -- Esc hard exits (like Ctrl-C usually does)
+                ['<C-c>'] = { '<esc>', type = 'command' },
+                ['<esc>'] = require('telescope.actions').close,
+              },
+            },
+          },
+        },
         extensions = {
           ['ui-select'] = {
             require('telescope.themes').get_dropdown(),
@@ -655,7 +846,7 @@ require('lazy').setup({
         },
       }
 
-      -- LSP servers and clients are able to communicate to each other what features they support.
+      -- LSP servers and clients are able to communicate to each other what features they support.c#
       --  By default, Neovim doesn't support everything that is in the LSP specification.
       --  When you add blink.cmp, luasnip, etc. Neovim now has *more* capabilities.
       --  So, we create new capabilities with blink.cmp, and then broadcast that to the servers.
@@ -683,6 +874,51 @@ require('lazy').setup({
         -- But for many setups, the LSP (`ts_ls`) will work just fine
         -- ts_ls = {},
         --
+
+        omnisharp = {
+          cmd = { 'dotnet', vim.fn.stdpath 'data' .. '/mason/packages/omnisharp/libexec/OmniSharp.dll' },
+          enable_roslyn_analyzers = true,
+          organize_imports_on_format = true,
+          enable_import_completion = true,
+          settings = {
+            FormattingOptions = {
+              -- Enables support for reading code style, naming convention and analyzer
+              -- settings from .editorconfig.
+              EnableEditorConfigSupport = true,
+              -- Specifies whether 'using' directives should be grouped and sorted during
+              -- document formatting.
+              OrganizeImports = true,
+            },
+            MsBuild = {
+              -- If true, MSBuild project system will only load projects for files that
+              -- were opened in the editor. This setting is useful for big C# codebases
+              -- and allows for faster initialization of code navigation features only
+              -- for projects that are relevant to code that is being edited. With this
+              -- setting enabled OmniSharp may load fewer projects and may thus display
+              -- incomplete reference lists for symbols.
+              LoadProjectsOnDemand = nil,
+            },
+            RoslynExtensionsOptions = {
+              -- Enables support for roslyn analyzers, code fixes and rulesets.
+              EnableAnalyzersSupport = true,
+              -- Enables support for showing unimported types and unimported extension
+              -- methods in completion lists. When committed, the appropriate using
+              -- directive will be added at the top of the current file. This option can
+              -- have a negative impact on initial completion responsiveness,
+              -- particularly for the first few completion sessions after opening a
+              -- solution.
+              EnableImportCompletion = true,
+              -- Only run analyzers against open files when 'enableRoslynAnalyzers' is
+              -- true
+              AnalyzeOpenDocumentsOnly = nil,
+            },
+            Sdk = {
+              -- Specifies whether to include preview versions of the .NET SDK when
+              -- determining which version to use for project loading.
+              IncludePrereleases = true,
+            },
+          },
+        },
 
         lua_ls = {
           -- cmd = { ... },
@@ -716,6 +952,8 @@ require('lazy').setup({
       local ensure_installed = vim.tbl_keys(servers or {})
       vim.list_extend(ensure_installed, {
         'stylua', -- Used to format Lua code
+        'omnisharp', -- C# language server
+        'csharpier', -- C# formatter (optional)
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
@@ -768,6 +1006,7 @@ require('lazy').setup({
       end,
       formatters_by_ft = {
         lua = { 'stylua' },
+        cs = { 'csharpier' }, -- Add C# formatting support
         -- Conform can also run multiple formatters sequentially
         -- python = { "isort", "black" },
         --
@@ -835,7 +1074,7 @@ require('lazy').setup({
         -- <c-k>: Toggle signature help
         --
         -- See :h blink-cmp-config-keymap for defining your own keymap
-        preset = 'default',
+        preset = 'super-tab',
 
         -- For more advanced Luasnip keymaps (e.g. selecting choice nodes, expansion) see:
         --    https://github.com/L3MON4D3/LuaSnip?tab=readme-ov-file#keymaps
@@ -850,6 +1089,10 @@ require('lazy').setup({
       completion = {
         -- By default, you may press `<c-space>` to show the documentation.
         -- Optionally, set `auto_show = true` to show the documentation after a delay.
+        trigger = {
+          show_on_insert_on_trigger_character = true,
+          show_on_x_blocked_trigger_characters = { ' ', '\n', '\t' },
+        },
         documentation = { auto_show = false, auto_show_delay_ms = 500 },
       },
 
@@ -944,7 +1187,7 @@ require('lazy').setup({
     main = 'nvim-treesitter.configs', -- Sets main module to use for opts
     -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
     opts = {
-      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' },
+      ensure_installed = { 'bash', 'c', 'c_sharp', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' },
       -- Autoinstall languages that are not installed
       auto_install = true,
       highlight = {
@@ -1011,6 +1254,20 @@ require('lazy').setup({
     },
   },
 })
+
+vim.keymap.set('n', '<leader>ha', function()
+  require('harpoon.mark').add_file()
+end, { desc = 'Harpoon: Add file' })
+
+vim.keymap.set('n', '<leader>hm', function()
+  require('harpoon.ui').toggle_quick_menu()
+end, { desc = 'Harpoon: Toggle menu' })
+
+for i = 1, 9 do
+  vim.keymap.set('n', '<leader>h' .. i, function()
+    require('harpoon.ui').nav_file(i)
+  end, { desc = 'Harpoon: Go to file ' .. i })
+end
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
