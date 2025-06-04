@@ -118,37 +118,6 @@ vim.o.showmode = false
   vim.o.clipboard = 'unnamedplus'
 end)--]]
 
-vim.keymap.set('n', '<leader>p', '"+p', { desc = 'Paste system clipboard below current line' })
-vim.keymap.set('n', '<leader>P', '"+P', { desc = 'Paste system clipboard above current line' })
-vim.keymap.set('v', '<leader>p', '"+p', { desc = 'Paste system clipboard below current line' })
-vim.keymap.set('v', '<leader>P', '"+P', { desc = 'Paste system clipboard above current line' })
-
---[[
-This should work for pasting under/above cursor 
-
-vim.keymap.set('n', '<leader>p', '"o<Esc>+p', { desc = 'Paste system clipboard below current line' })
-vim.keymap.set('n', '<leader>P', '"O<Esc>+P', { desc = 'Paste system clipboard above current line' })
-vim.keymap.set('v', '<leader>p', '"o<Esc>+p', { desc = 'Paste system clipboard below current line' })
-vim.keymap.set('v', '<leader>P', '"O<Esc>+P', { desc = 'Paste system clipboard above current line' })
-]]
---
-
-vim.keymap.set('n', '<leader>yy', '"+yy', { desc = 'Copy to system clipboard' })
-vim.keymap.set('v', '<leader>y', '"+y', { desc = 'Copy to system clipboard' })
-
--- In all modes, swap the functionality
-vim.keymap.set({ 'i', 'n', 'v' }, '<C-c>', '<Esc>')
-vim.keymap.set({ 'i', 'n', 'v' }, '<Esc>', '<C-c>')
-
--- Or if you want to be more specific:
-vim.keymap.set('i', '<C-c>', '<Esc>') -- Ctrl-C exits insert mode properly
-vim.keymap.set('n', '<C-c>', '<Esc>') -- Ctrl-C cancels operations
-vim.keymap.set('v', '<C-c>', '<Esc>') -- Ctrl-C exits visual mode
-
-vim.keymap.set('i', '<Esc>', '<C-c>') -- Esc interrupts
-vim.keymap.set('n', '<Esc>', '<C-c>') -- Esc interrupts
-vim.keymap.set('v', '<Esc>', '<C-c>') -- Esc interrupts
-
 -- Enable break indent
 vim.o.breakindent = true
 
@@ -197,44 +166,13 @@ vim.o.scrolloff = 10
 -- See `:help 'confirm'`
 vim.o.confirm = true
 
--- [[ Basic Keymaps ]]
---  See `:help vim.keymap.set()`
-
--- Clear highlights on search when pressing <Esc> in normal mode
---  See `:help hlsearch`
-vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
-
--- Diagnostic keymaps
-vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
-
--- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
--- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
--- is not what someone will guess without a bit more experience.
---
--- NOTE: This won't work in all terminal emulators/tmux/etc. Try your own mapping
--- or just use <C-\><C-n> to exit terminal mode
-vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
-
--- TIP: Disable arrow keys in normal mode
--- vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
--- vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
--- vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
--- vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
-
--- Keybinds to make split navigation easier.
---  Use CTRL+<hjkl> to switch between windows
---
---  See `:help wincmd` for a list of all window commands
-vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
-vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
-vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
-vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
-
--- NOTE: Some terminals have colliding keymaps or are not able to send distinct keycodes
--- vim.keymap.set("n", "<C-S-h>", "<C-w>H", { desc = "Move window to the left" })
--- vim.keymap.set("n", "<C-S-l>", "<C-w>L", { desc = "Move window to the right" })
--- vim.keymap.set("n", "<C-S-j>", "<C-w>J", { desc = "Move window to the lower" })
--- vim.keymap.set("n", "<C-S-k>", "<C-w>K", { desc = "Move window to the upper" })
+vim.o.shell = 'powershell'
+vim.o.shellcmdflag =
+  '-NoLogo -NoProfile -ExecutionPolicy RemoteSigned -Command [Console]::InputEncoding=[Console]::OutputEncoding=[System.Text.Encoding]::UTF8;'
+vim.o.shellredir = '2>&1 | Out-File -Encoding UTF8 %s; exit $LastExitCode'
+vim.o.shellpipe = '2>&1 | Out-File -Encoding UTF8 %s; exit $LastExitCode'
+vim.o.shellquote = ''
+vim.o.shellxquote = ''
 
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
@@ -322,8 +260,7 @@ require('lazy').setup({
     },
   },
 
-  --recommended to have by DAP
-  {
+  { --Recommended to have by DAP
     'folke/lazydev.nvim',
     ft = 'lua', -- optional: only load when editing Lua
     opts = {
@@ -351,11 +288,6 @@ require('lazy').setup({
     end,
   },
 
-  --Debugger + requirements
-  --  require('neodev').setup {
-  --    library = { plugins = { 'nvim-dap-ui' }, types = true },
-  --  }
-
   {
     'mfussenegger/nvim-dap',
     dependencies = {
@@ -369,7 +301,47 @@ require('lazy').setup({
 
       -- Setup UI
       dapui.setup()
-      require('nvim-dap-virtual-text').setup()
+      require('nvim-dap-virtual-text').setup {
+        enabled = true, -- enable this plugin (the default)
+        enabled_commands = true, -- create commands DapVirtualTextEnable, DapVirtualTextDisable, DapVirtualTextToggle, (DapVirtualTextForceRefresh for refreshing when debug adapter did not notify its termination)
+        highlight_changed_variables = true, -- highlight changed values with NvimDapVirtualTextChanged, else always NvimDapVirtualText
+        highlight_new_as_changed = true, -- highlight new variables in the same way as changed variables (if highlight_changed_variables)
+        show_stop_reason = true, -- show stop reason when stopped for exceptions
+        commented = true, -- prefix virtual text with comment string
+        only_first_definition = false, -- only show virtual text at first definition (if there are multiple)
+        all_references = false, -- show virtual text on all all references of the variable (not only definitions)
+        clear_on_continue = false, -- clear virtual text on "continue" (might cause flickering when stepping)
+        text_prefix = '',
+        separator = ',',
+        error_prefix = '  ',
+        info_prefix = '  ',
+        enable_commands = true,
+        virt_lines_above = true,
+        filter_references_pattern = '<module',
+        --- A callback that determines how a variable is displayed or whether it should be omitted
+        --- @param variable Variable https://microsoft.github.io/debug-adapter-protocol/specification#Types_Variable
+        --- @param buf number
+        --- @param stackframe dap.StackFrame https://microsoft.github.io/debug-adapter-protocol/specification#Types_StackFrame
+        --- @param node userdata tree-sitter node identified as variable definition of reference (see `:h tsnode`)
+        --- @param options nvim_dap_virtual_text_options Current options for nvim-dap-virtual-text
+        --- @return string|nil A text how the virtual text should be displayed or nil, if this variable shouldn't be displayed
+        display_callback = function(variable, buf, stackframe, node, options)
+          -- by default, strip out new line characters
+          if options.virt_text_pos == 'inline' then
+            return ' = ' .. variable.value:gsub('%s+', ' ')
+          else
+            return variable.name .. ' = ' .. variable.value:gsub('%s+', ' ')
+          end
+        end,
+        -- position of virtual text, see `:h nvim_buf_set_extmark()`, default tries to inline the virtual text. Use 'eol' to set to end of line
+        virt_text_pos = vim.fn.has 'nvim-0.10' == 1 and 'inline' or 'eol',
+
+        -- experimental features:
+        all_frames = false, -- show virtual text for all stack frames not only current. Only works for debugpy on my machine.
+        virt_lines = false, -- show virtual lines instead of virtual text (will flicker!)
+        virt_text_win_col = nil, -- position the virtual text at a fixed window column (starting from the first text column) ,
+        -- e.g. 80 to position at column 80, see `:h nvim_buf_set_extmark()`
+      }
 
       -- Auto open/close UI
       dap.listeners.after.event_initialized['dapui_config'] = function()
@@ -419,6 +391,11 @@ require('lazy').setup({
           end,
           cwd = '${workspaceFolder}',
           stopAtEntry = false,
+          sourceFileMap = {
+            [vim.fn.getcwd()] = vim.fn.getcwd(),
+          },
+          justMyCode = false,
+          enableStepFiltering = false,
         },
       }
 
@@ -1207,6 +1184,24 @@ require('lazy').setup({
     --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
   },
 
+  -- Neotree File tree: shows file tree window
+  {
+    'nvim-neo-tree/neo-tree.nvim',
+    branch = 'v3.x',
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+      'nvim-tree/nvim-web-devicons', -- not strictly required, but recommended
+      'MunifTanjim/nui.nvim',
+      -- {"3rd/image.nvim", opts = {}}, -- Optional image support in preview window: See `# Preview Mode` for more information
+    },
+    lazy = false, -- neo-tree will lazily load itself
+    ---@module "neo-tree"
+    ---@type neotree.Config?
+    opts = {
+      -- fill any relevant options here
+    },
+  },
+
   -- The following comments only work if you have downloaded the kickstart repo, not just copy pasted the
   -- init.lua. If you want these files, they are in the repository, so you can just download them and
   -- place them in the correct locations.
@@ -1255,6 +1250,108 @@ require('lazy').setup({
   },
 })
 
+--=================================== Key Binds ===================================--
+
+-- [[ Basic Keymaps ]]
+--  See `:help vim.keymap.set()`
+
+-- Clear highlights on search when pressing <Esc> in normal mode
+--  See `:help hlsearch`
+vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
+
+-- Diagnostic keymaps
+vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
+
+-- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
+-- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
+-- is not what someone will guess without a bit more experience.
+--
+-- NOTE: This won't work in all terminal emulators/tmux/etc. Try your own mapping
+-- or just use <C-\><C-n> to exit terminal mode
+vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
+
+-- Keybinds to make split navigation easier.
+--  Use CTRL+<hjkl> to switch between windows
+--
+--  See `:help wincmd` for a list of all window commands
+vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
+vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
+vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
+vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
+
+-- NOTE: Some terminals have colliding keymaps or are not able to send distinct keycodes
+-- vim.keymap.set("n", "<C-S-h>", "<C-w>H", { desc = "Move window to the left" })
+-- vim.keymap.set("n", "<C-S-l>", "<C-w>L", { desc = "Move window to the right" })
+-- vim.keymap.set("n", "<C-S-j>", "<C-w>J", { desc = "Move window to the lower" })
+-- vim.keymap.set("n", "<C-S-k>", "<C-w>K", { desc = "Move window to the upper" })
+
+-- In all modes, swap the functionality
+vim.keymap.set({ 'i', 'n', 'v' }, '<C-c>', '<Esc>')
+vim.keymap.set({ 'i', 'n', 'v' }, '<Esc>', '<C-c>')
+
+-- Allows you to move the cursor using Alt+hjkl in insert mode
+vim.keymap.set({ 'i' }, '<M-h>', '<Left>')
+vim.keymap.set({ 'i' }, '<M-j>', '<Down>')
+vim.keymap.set({ 'i' }, '<M-k>', '<Up>')
+vim.keymap.set({ 'i' }, '<M-l>', '<Right>')
+
+--Delete key functionality on C-l in insertmode
+vim.keymap.set({ 'i' }, '<C-l>', '<Del>')
+
+--Paste system clipboard: <leader>p
+vim.keymap.set('n', '<leader>p', '"+p', { desc = 'Paste system clipboard below current line' })
+vim.keymap.set('v', '<leader>p', '"+p', { desc = 'Paste system clipboard' })
+
+--[[
+This should work for pasting under/above cursor 
+
+vim.keymap.set('n', '<leader>p', '"o<Esc>+p', { desc = 'Paste system clipboard below current line' })
+vim.keymap.set('n', '<leader>P', '"O<Esc>+P', { desc = 'Paste system clipboard above current line' })
+vim.keymap.set('v', '<leader>p', '"o<Esc>+p', { desc = 'Paste system clipboard below current line' })
+vim.keymap.set('v', '<leader>P', '"O<Esc>+P', { desc = 'Paste system clipboard above current line' })
+]]
+
+--Copy to system clipboard
+--<leader>yy grabs current line in normal mode
+--<leader>y grabs highlighted text in viusal mode
+vim.keymap.set('n', '<leader>yy', '"+yy', { desc = 'Copy to system clipboard' })
+vim.keymap.set('v', '<leader>y', '"+y', { desc = 'Copy to system clipboard' })
+
+--Scroll through Tabs Backwards (one of these can go when we figure out what we like)
+vim.keymap.set('n', '<S-PageDown>', '<C-PageUp>')
+vim.keymap.set('n', '<M-PageDown>', '<C-PageUp>')
+
+--Go to definition binds
+vim.keymap.set('n', 'grg', '<cmd>lua vim.diagnostic.setloclist()<cr>', { desc = 'Open diagnostics list' })
+vim.keymap.set('n', 'grf', '<cmd>lua vim.diagnostic.open_float()<cr>', { desc = 'Open floating diagnostic window' })
+
+--Neotree Binds
+vim.keymap.set('n', '<leader>tc', '<cmd>Neotree action=focus position=left<cr> toggle=true source=filesystem', { desc = 'Open neotree at cwd' })
+vim.keymap.set('n', '<leader>tb', '<cmd>Neotree action=focus position=left<cr> toggle=true source=buffers', { desc = 'Open neotree at cwd' })
+
+vim.keymap.set('n', '<leader>tf', function()
+  local reveal_file = vim.fn.expand '%:p'
+  if reveal_file == '' then
+    reveal_file = vim.fn.getcwd()
+  else
+    local f = io.open(reveal_file, 'r')
+    if f then
+      f.close(f)
+    else
+      reveal_file = vim.fn.getcwd()
+    end
+  end
+  require('neo-tree.command').execute {
+    action = 'focus', -- OPTIONAL, this is the default value
+    source = 'filesystem', -- OPTIONAL, this is the default value
+    position = 'left', -- OPTIONAL, this is the default value
+    reveal_file = reveal_file, -- path to file or folder to reveal
+    reveal_force_cwd = true, -- change cwd without asking if needed
+    toggle = true,
+  }
+end, { desc = 'Open neo-tree at current file or working directory' })
+
+--Harpoon Binds: All start with <leader>h  a:adds file m:toggles menu 1-9:quick open file at that number
 vim.keymap.set('n', '<leader>ha', function()
   require('harpoon.mark').add_file()
 end, { desc = 'Harpoon: Add file' })
