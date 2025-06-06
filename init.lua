@@ -378,7 +378,7 @@ require('lazy').setup({
 
             -- Use dotnet CLI to figure out output path
             local dll_name = vim.fn.fnamemodify(project_file, ':t:r') .. '.dll'
-            local dll_path = vim.fn.getcwd() .. '\\bin\\Debug\\net8.0\\' .. dll_name
+            local dll_path = vim.fn.getcwd() .. '\\bin\\Debug\\net9.0\\' .. dll_name
 
             if vim.fn.filereadable(dll_path) == 0 then
               error('DLL not found: ' .. dll_path)
