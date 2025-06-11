@@ -260,18 +260,6 @@ require('lazy').setup({
     },
   },
 
-  { --Recommended to have by DAP
-    'folke/lazydev.nvim',
-    ft = 'lua', -- optional: only load when editing Lua
-    opts = {
-      library = {
-        -- add plugins here if you want extra API support
-        -- auto-detects if using Lazy
-        plugins = { 'nvim-dap-ui' },
-      },
-    },
-  },
-
   { --Floating message buffer
     'AckslD/messages.nvim',
     config = function()
@@ -288,7 +276,36 @@ require('lazy').setup({
     end,
   },
 
-  {
+  --doesn't currently work, check again in the future
+  -- { --NuGet Package Manager
+  --   --<leader> ni = install
+  --   --<leader> nr = remove
+  --   'd7omdev/nuget.nvim',
+  --   dependencies = {
+  --     'nvim-lua/plenary.nvim',
+  --     'nvim-telescope/telescope.nvim',
+  --   },
+  --   config = function()
+  --     require('nuget').setup()
+  --   end,
+  -- },
+
+  --Extends go to definition of omnisharp
+  'Hoffs/omnisharp-extended-lsp.nvim',
+
+  { --Recommended to have by DAP
+    'folke/lazydev.nvim',
+    ft = 'lua', -- optional: only load when editing Lua
+    opts = {
+      library = {
+        -- add plugins here if you want extra API support
+        -- auto-detects if using Lazy
+        plugins = { 'nvim-dap-ui' },
+      },
+    },
+  },
+
+  { --DAP (debugger)
     'mfussenegger/nvim-dap',
     dependencies = {
       'rcarriga/nvim-dap-ui',
@@ -791,6 +808,17 @@ require('lazy').setup({
               vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf })
             end, '[T]oggle Inlay [H]ints')
           end
+
+          --Keybind overrides for omnisharp LSP [uses omnisharp extended plugin]
+          --provides better support for 'GOTO' functions
+          if client and client.name == 'omnisharp' then
+            local omnisharp_extended = require 'omnisharp_extended'
+            -- Override the default telescope ones with omnisharp-extended versions
+            map('grd', omnisharp_extended.telescope_lsp_definitions, '[G]oto [D]efinition')
+            map('grr', omnisharp_extended.telescope_lsp_references, '[G]oto [R]eferences')
+            map('gri', omnisharp_extended.telescope_lsp_implementation, '[G]oto [I]mplementation')
+            map('grt', omnisharp_extended.telescope_lsp_type_definition, '[G]oto [T]ype Definition')
+          end
         end,
       })
 
@@ -1052,7 +1080,7 @@ require('lazy').setup({
         --
         -- See :h blink-cmp-config-keymap for defining your own keymap
         preset = 'super-tab',
-
+        ['<c-e>'] = { 'show', 'hide' },
         -- For more advanced Luasnip keymaps (e.g. selecting choice nodes, expansion) see:
         --    https://github.com/L3MON4D3/LuaSnip?tab=readme-ov-file#keymaps
       },
