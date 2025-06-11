@@ -222,6 +222,9 @@ require('lazy').setup({
   'nvim-lua/plenary.nvim',
   'ThePrimeagen/harpoon',
 
+  --Primeagen vim practice
+  'ThePrimeagen/vim-be-good',
+
   --Fugitive - allows you to use git inside of neovim
   'tpope/vim-fugitive',
 
