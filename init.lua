@@ -293,6 +293,45 @@ require('lazy').setup({
   --   end,
   -- },
 
+  { --Session manager for nvim
+    'rmagatti/auto-session',
+    lazy = false,
+    keys = {
+      -- Will use Telescope if installed or a vim.ui.select picker otherwise
+      { '<leader>os', '<cmd>SessionSearch<CR>', desc = 'Session search' },
+      { '<leader>ow', '<cmd>SessionSave<CR>', desc = 'Save session' },
+      { '<leader>wa', '<cmd>SessionToggleAutoSave<CR>', desc = 'Toggle autosave' },
+    },
+
+    ---enables autocomplete for opts
+    ---@module "auto-session"
+    ---@type AutoSession.Config
+    opts = {
+      -- ⚠️ This will only work if Telescope.nvim is installed
+      -- The following are already the default values, no need to provide them if these are already the settings you want.
+      session_lens = {
+        -- If load_on_setup is false, make sure you use `:SessionSearch` to open the picker as it will initialize everything first
+        load_on_setup = true,
+        previewer = false,
+        mappings = {
+          -- Mode can be a string or a table, e.g. {"i", "n"} for both insert and normal mode
+          delete_session = { 'i', '<C-D>' },
+          alternate_session = { 'i', '<C-S>' },
+          copy_session = { 'i', '<C-Y>' },
+        },
+        -- Can also set some Telescope picker options
+        -- For all options, see: https://github.com/nvim-telescope/telescope.nvim/blob/master/doc/telescope.txt#L112
+        theme_conf = {
+          border = true,
+          -- layout_config = {
+          --   width = 0.8, -- Can set width and height as percent of window
+          --   height = 0.5,
+          -- },
+        },
+      },
+    },
+  },
+
   --Extends go to definition of omnisharp
   'Hoffs/omnisharp-extended-lsp.nvim',
 
@@ -379,6 +418,9 @@ require('lazy').setup({
         type = 'executable',
         command = vim.fn.stdpath 'data' .. '\\mason\\packages\\netcoredbg\\netcoredbg\\netcoredbg.exe',
         args = { '--interpreter=vscode' },
+        options = {
+          detached = false,
+        },
       }
 
       dap.configurations.cs = {
@@ -416,6 +458,10 @@ require('lazy').setup({
           },
           justMyCode = false,
           enableStepFiltering = false,
+          -- Console configuration - output to DAP console in dapui
+          console = 'console', -- Send output to DAP console window
+          externalConsole = false, -- Don't create external console window
+          internalConsoleOptions = 'openOnSessionStart',
         },
       }
 
@@ -612,7 +658,7 @@ require('lazy').setup({
       pcall(require('telescope').load_extension, 'fzf')
       pcall(require('telescope').load_extension, 'ui-select')
 
-      -- See `:help telescope.builtin`
+      -- See `:help telescope.builtin`ini
       local builtin = require 'telescope.builtin'
       vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[S]earch [H]elp' })
       vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps' })
@@ -1355,6 +1401,16 @@ vim.keymap.set('n', '<M-PageDown>', '<C-PageUp>')
 --Go to definition binds
 vim.keymap.set('n', 'grg', '<cmd>lua vim.diagnostic.setloclist()<cr>', { desc = 'Open diagnostics list' })
 vim.keymap.set('n', 'grf', '<cmd>lua vim.diagnostic.open_float()<cr>', { desc = 'Open floating diagnostic window' })
+
+-- -- Fold all lines containing _logger
+-- vim.keymap.set('n', '<leader>lf', function()
+--   vim.cmd 'set foldmethod=expr'
+--   vim.cmd 'set foldexpr=getline(v:lnum)=~"_logger"?1:0'
+--   vim.cmd 'normal! zM' -- Close all folds
+-- end)
+--
+-- -- Unfold all
+-- vim.keymap.set('n', '<leader>lu', 'zR')
 
 --Neotree Binds
 vim.keymap.set('n', '<leader>tc', '<cmd>Neotree action=focus position=left<cr> toggle=true source=filesystem', { desc = 'Open neotree at cwd' })
