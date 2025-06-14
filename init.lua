@@ -423,50 +423,72 @@ require('lazy').setup({
         },
       }
 
-      dap.configurations.cs = {
-        {
-          type = 'coreclr',
-          name = 'Launch .NET Core App',
-          request = 'launch',
-          program = function()
-            -- Find .csproj file
-            local project_file = vim.fn.glob(vim.fn.getcwd() .. '/*.csproj')
-            if project_file == '' then
-              error 'No .csproj file found in current directory!'
-            end
-
-            -- Build the project
-            vim.fn.system { 'dotnet', 'build', project_file }
-
-            -- Use dotnet CLI to figure out output path
-            local dll_name = vim.fn.fnamemodify(project_file, ':t:r') .. '.dll'
-            local dll_path = vim.fn.getcwd() .. '\\bin\\Debug\\net9.0\\' .. dll_name
-
-            if vim.fn.filereadable(dll_path) == 0 then
-              error('DLL not found: ' .. dll_path)
-            end
-
-            local build_output = vim.fn.system { 'dotnet', 'build', project_file }
-            print(build_output)
-
-            return dll_path
-          end,
-          cwd = '${workspaceFolder}',
-          stopAtEntry = false,
-          sourceFileMap = {
-            [vim.fn.getcwd()] = vim.fn.getcwd(),
-          },
-          justMyCode = false,
-          enableStepFiltering = false,
-          -- Console configuration - output to DAP console in dapui
-          console = 'console', -- Send output to DAP console window
-          externalConsole = false, -- Don't create external console window
-          internalConsoleOptions = 'openOnSessionStart',
-        },
+      --Godot C# adapter config
+      dap.adapters.godot_csharp = {
+        type = 'server',
+        host = '127.0.0.1',
+        port = 6006,
       }
 
-      -- Keymaps
-      vim.keymap.set('n', '<F5>', dap.continue, { desc = 'Start/Continue Debug' })
+      dap.configurations.cs =
+        {
+          {
+            type = 'coreclr',
+            name = 'Launch .NET Core App',
+            request = 'launch',
+            program = function()
+              -- Find .csproj file
+              local project_file = vim.fn.glob(vim.fn.getcwd() .. '/*.csproj')
+              if project_file == '' then
+                error 'No .csproj file found in current directory!'
+              end
+
+              -- Build the project
+              vim.fn.system { 'dotnet', 'build', project_file }
+
+              -- Use dotnet CLI to figure out output path
+              local dll_name = vim.fn.fnamemodify(project_file, ':t:r') .. '.dll'
+              local dll_path = vim.fn.getcwd() .. '\\bin\\Debug\\net9.0\\' .. dll_name
+
+              if vim.fn.filereadable(dll_path) == 0 then
+                error('DLL not found: ' .. dll_path)
+              end
+
+              local build_output = vim.fn.system { 'dotnet', 'build', project_file }
+              print(build_output)
+
+              return dll_path
+            end,
+            cwd = '${workspaceFolder}',
+            stopAtEntry = false,
+            sourceFileMap = {
+              [vim.fn.getcwd()] = vim.fn.getcwd(),
+            },
+            justMyCode = false,
+            enableStepFiltering = false,
+            -- Console configuration - output to DAP console in dapui
+            console = 'console', -- Send output to DAP console window
+            externalConsole = false, -- Don't create external console window
+            internalConsoleOptions = 'openOnSessionStart',
+          },
+
+          {
+            type = 'godot_csharp',
+            request = 'launch',
+            name = 'Launch Godot C# Project',
+            project = '${workspaceFolder}',
+            launch_scene = true,
+          },
+
+          {
+            type = 'godot_csharp',
+            request = 'attach',
+            name = 'Attach to Godot C# Process',
+            project = '${workspaceFolder}',
+          },
+        },
+        -- Keymaps
+        vim.keymap.set('n', '<F5>', dap.continue, { desc = 'Start/Continue Debug' })
       vim.keymap.set('n', '<F9>', dap.toggle_breakpoint, { desc = 'Toggle Breakpoint' })
       vim.keymap.set('n', '<F10>', dap.step_over, { desc = 'Step Over' })
       vim.keymap.set('n', '<F11>', dap.step_into, { desc = 'Step Into' })
@@ -616,14 +638,25 @@ require('lazy').setup({
         -- You can put your default mappings / updates / etc. in here
         --  All the info you're looking for is in `:help telescope.setup()`
         --
-        -- defaults = {
-        --   mappings = {
-        --     i = { ['<c-enter>'] = 'to_fuzzy_refine' },
-        --   },
-        -- },
+        defaults = {
+          vimgrep_arguments = {
+            'rg',
+            '--color=never',
+            '--no-heading',
+            '--with-filename',
+            '--line-number',
+            '--column',
+            '--smart-case',
+            '--hidden',
+          },
+          -- mappings = {
+          --   i = { ['<c-enter>'] = 'to_fuzzy_refine' },
+          -- },
+        },
         -- pickers = {}
         pickers = {
           find_files = {
+            hidden = true,
             mappings = {
               n = {
                 ['cd'] = function(prompt_bufnr)
@@ -634,15 +667,15 @@ require('lazy').setup({
                   vim.cmd(string.format('silent lcd %s', dir))
                 end,
                 -- Same mappings for normal mode within telescope
-                ['<esc>'] = require('telescope.actions').close,
-                ['<C-c>'] = { '<esc>', type = 'command' },
+                -- ['<esc>'] = require('telescope.actions').close,
+                -- ['<C-c>'] = { '<esc>', type = 'command' },
               },
               i = {
                 -- Remove the <C-c> mapping to allow default behavior (go to normal mode)
                 -- ['<C-c>'] = require('telescope.actions').to_normal_mode, -- This line causes the issue
                 -- Esc hard exits (like Ctrl-C usually does)
-                ['<C-c>'] = { '<esc>', type = 'command' },
-                ['<esc>'] = require('telescope.actions').close,
+                -- ['<C-c>'] = { '<esc>', type = 'command' },
+                -- ['<esc>'] = require('telescope.actions').close,
               },
             },
           },
@@ -1276,6 +1309,14 @@ require('lazy').setup({
     ---@type neotree.Config?
     opts = {
       -- fill any relevant options here
+      filesystem = {
+        filtered_items = {
+          visible = false, -- Shows hidden files normally (not dimmed)
+          hide_dotfiles = false,
+          hide_gitignored = false,
+          hide_hidden = false,
+        },
+      },
     },
   },
 
@@ -1363,8 +1404,8 @@ vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper win
 -- vim.keymap.set("n", "<C-S-k>", "<C-w>K", { desc = "Move window to the upper" })
 
 -- In all modes, swap the functionality
-vim.keymap.set({ 'i', 'n', 'v' }, '<C-c>', '<Esc>')
-vim.keymap.set({ 'i', 'n', 'v' }, '<Esc>', '<C-c>')
+-- vim.keymap.set({ 'i', 'n', 'v' }, '<C-c>', '<Esc>', { noremap = true, silent = true })
+-- vim.keymap.set({ 'i', 'n', 'v' }, '<Esc>', '<C-c>', { noremap = true, silent = true })
 
 -- Allows you to move the cursor using Alt+hjkl in insert mode
 vim.keymap.set({ 'i' }, '<M-h>', '<Left>')
@@ -1395,8 +1436,7 @@ vim.keymap.set('n', '<leader>yy', '"+yy', { desc = 'Copy to system clipboard' })
 vim.keymap.set('v', '<leader>y', '"+y', { desc = 'Copy to system clipboard' })
 
 --Scroll through Tabs Backwards (one of these can go when we figure out what we like)
-vim.keymap.set('n', '<S-PageDown>', '<C-PageUp>')
-vim.keymap.set('n', '<M-PageDown>', '<C-PageUp>')
+vim.keymap.set('n', '<S-Tab>', '<C-PageUp>')
 
 --Go to definition binds
 vim.keymap.set('n', 'grg', '<cmd>lua vim.diagnostic.setloclist()<cr>', { desc = 'Open diagnostics list' })
