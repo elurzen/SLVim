@@ -357,6 +357,7 @@ require('lazy').setup({
     config = function()
       local dap = require 'dap'
       local dapui = require 'dapui'
+      dap.set_log_level 'DEBUG'
 
       -- Setup UI
       dapui.setup()
@@ -476,7 +477,11 @@ require('lazy').setup({
             type = 'godot_csharp',
             request = 'launch',
             name = 'Launch Godot C# Project',
-            project = '${workspaceFolder}',
+            project = function()
+              -- Ensure uppercase drive letter for Windows
+              local cwd = vim.fn.getcwd()
+              return cwd:gsub('^(%l):', string.upper)
+            end,
             launch_scene = true,
           },
 
@@ -484,7 +489,11 @@ require('lazy').setup({
             type = 'godot_csharp',
             request = 'attach',
             name = 'Attach to Godot C# Process',
-            project = '${workspaceFolder}',
+            project = function()
+              -- Ensure uppercase drive letter for Windows
+              local cwd = vim.fn.getcwd()
+              return cwd:gsub('^(%l):', string.upper)
+            end,
           },
         },
         -- Keymaps
@@ -742,8 +751,7 @@ require('lazy').setup({
       },
     },
   },
-  {
-    -- Main LSP Configuration
+  { -- Main LSP Configuration
     'neovim/nvim-lspconfig',
     dependencies = {
       -- Automatically install LSPs and related tools to stdpath for Neovim
@@ -1021,6 +1029,51 @@ require('lazy').setup({
             },
           },
         },
+
+        superhtml = { --HTML LSP
+          filetypes = {
+            'html',
+            'shtml',
+            'htm',
+          },
+        },
+
+        ts_ls = { --Typescript LSP (for both typescript and javascript)
+          filetypes = { 'javascript', 'javascriptreact', 'typescript', 'typescriptreact' },
+        },
+
+        cssls = { -- CSS LSP
+          filetypes = { 'css', 'scss', 'less' },
+        },
+
+        tailwindcss = { --Tailwind LSP (CSS)
+          filetypes = {
+            'html',
+            'css',
+            'scss',
+            'javascript',
+            'javascriptreact',
+            'typescript',
+            'typescriptreact',
+            'vue',
+            'svelte',
+          },
+          settings = {
+            tailwindCSS = {
+              classAttributes = { 'class', 'className', 'classList', 'ngClass' },
+              lint = {
+                cssConflict = 'warning',
+                invalidApply = 'error',
+                invalidConfigPath = 'error',
+                invalidScreen = 'error',
+                invalidTailwindDirective = 'error',
+                invalidVariant = 'error',
+                recommendedVariantOrder = 'warning',
+              },
+              validate = true,
+            },
+          },
+        },
       }
 
       -- Ensure the servers and tools above are installed
@@ -1249,6 +1302,19 @@ require('lazy').setup({
       -- - sr)'  - [S]urround [R]eplace [)] [']
       require('mini.surround').setup()
 
+      -- Color highlighting for CSS colors
+      -- require('mini.hipatterns').setup {
+      --   highlighters = {
+      --     hex_color = require('mini.hipatterns').gen_highlighter.hex_color(),
+      --   },
+      -- }
+      local hipatterns = require 'mini.hipatterns'
+      hipatterns.setup {
+        highlighters = {
+          hex_color = hipatterns.gen_highlighter.hex_color(),
+        },
+      }
+
       -- Simple and easy statusline.
       --  You could remove this setup call if you don't like it,
       --  and try some other statusline plugin
@@ -1294,8 +1360,7 @@ require('lazy').setup({
     --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
   },
 
-  -- Neotree File tree: shows file tree window
-  {
+  { -- Neotree File tree: shows file tree window
     'nvim-neo-tree/neo-tree.nvim',
     branch = 'v3.x',
     dependencies = {
