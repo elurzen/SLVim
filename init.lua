@@ -225,6 +225,9 @@ require('lazy').setup({
   --Primeagen vim practice
   'ThePrimeagen/vim-be-good',
 
+  --nvim in browser? idk about this...little much
+  -- { 'glacambre/firenvim', build = ':call firenvim#install(0)' },
+
   --Fugitive - allows you to use git inside of neovim
   'tpope/vim-fugitive',
 
@@ -309,6 +312,8 @@ require('lazy').setup({
     opts = {
       -- ⚠️ This will only work if Telescope.nvim is installed
       -- The following are already the default values, no need to provide them if these are already the settings you want.
+      auto_save = false,
+      auto_create = false,
       session_lens = {
         -- If load_on_setup is false, make sure you use `:SessionSearch` to open the picker as it will initialize everything first
         load_on_setup = true,
@@ -1216,6 +1221,8 @@ require('lazy').setup({
         -- See :h blink-cmp-config-keymap for defining your own keymap
         preset = 'super-tab',
         ['<c-e>'] = { 'show', 'hide' },
+        ['<c-k>'] = {}, --disable original toggle documentation binding - conflict with i navigation
+        ['<c-d>'] = { 'show_documentation', 'hide_documentation' },
         -- For more advanced Luasnip keymaps (e.g. selecting choice nodes, expansion) see:
         --    https://github.com/L3MON4D3/LuaSnip?tab=readme-ov-file#keymaps
       },
@@ -1269,8 +1276,11 @@ require('lazy').setup({
     config = function()
       ---@diagnostic disable-next-line: missing-fields
       require('tokyonight').setup {
+        transparent = true,
         styles = {
           comments = { italic = false }, -- Disable italics in comments
+          sidebars = 'transparent',
+          floats = 'transparent',
         },
       }
 
@@ -1433,6 +1443,45 @@ require('lazy').setup({
   },
 })
 
+--Hack to ensure files open with captial drive letter (d:\ vs D:\) DAP breakpoints dont work if lowercase
+vim.api.nvim_create_autocmd('BufReadPost', {
+  callback = function()
+    local name = vim.api.nvim_buf_get_name(0)
+    if name:match '^[a-z]:\\' then
+      local fixed = name:gsub('^([a-z]):', function(d)
+        return d:upper() .. ':'
+      end)
+      vim.cmd('file ' .. fixed)
+    end
+  end,
+})
+
+local tokyonight_transparent = false
+local function toggle_tokyonight_transparency()
+  tokyonight_transparent = not tokyonight_transparent
+  require('tokyonight').setup {
+    style = 'storm', -- or your preferred variant
+    transparent = tokyonight_transparent,
+    styles = {
+      comments = { italic = false },
+      keywords = { italic = true },
+      functions = { italic = false },
+      variables = { italic = false },
+      types = { italic = true },
+      conditionals = { italic = false },
+      constants = { italic = false },
+      operators = { italic = false },
+      strings = { italic = false },
+      sidebars = tokyonight_transparent and 'transparent' or 'dark',
+      floats = tokyonight_transparent and 'transparent' or 'dark',
+    },
+  }
+
+  vim.cmd 'colorscheme tokyonight-storm'
+  print('Tokyo Night Transparency: ' .. (tokyonight_transparent and 'ON' or 'OFF'))
+end
+
+vim.keymap.set('n', '<leader>tt', toggle_tokyonight_transparency, { desc = 'Toggle Tokyo Night transparency' })
 --=================================== Key Binds ===================================--
 
 -- [[ Basic Keymaps ]]
@@ -1473,13 +1522,13 @@ vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper win
 -- vim.keymap.set({ 'i', 'n', 'v' }, '<Esc>', '<C-c>', { noremap = true, silent = true })
 
 -- Allows you to move the cursor using Alt+hjkl in insert mode
-vim.keymap.set({ 'i' }, '<M-h>', '<Left>')
-vim.keymap.set({ 'i' }, '<M-j>', '<Down>')
-vim.keymap.set({ 'i' }, '<M-k>', '<Up>')
-vim.keymap.set({ 'i' }, '<M-l>', '<Right>')
+vim.keymap.set({ 'i' }, '<C-h>', '<Left>')
+vim.keymap.set({ 'i' }, '<C-j>', '<Down>')
+vim.keymap.set({ 'i' }, '<C-k>', '<Up>')
+vim.keymap.set({ 'i' }, '<C-l>', '<Right>')
 
 --Delete key functionality on C-l in insertmode
-vim.keymap.set({ 'i' }, '<C-l>', '<Del>')
+vim.keymap.set({ 'i' }, '<C-e>', '<Del>')
 
 --Paste system clipboard: <leader>p
 vim.keymap.set('n', '<leader>p', '"+p', { desc = 'Paste system clipboard below current line' })
