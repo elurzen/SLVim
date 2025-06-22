@@ -1481,7 +1481,7 @@ local function toggle_tokyonight_transparency()
   print('Tokyo Night Transparency: ' .. (tokyonight_transparent and 'ON' or 'OFF'))
 end
 
-vim.keymap.set('n', '<leader>tt', toggle_tokyonight_transparency, { desc = 'Toggle Tokyo Night transparency' })
+vim.keymap.set('n', '<leader>o', toggle_tokyonight_transparency, { desc = 'Toggle Tokyo Night transparency' })
 --=================================== Key Binds ===================================--
 
 -- [[ Basic Keymaps ]]
@@ -1567,30 +1567,33 @@ vim.keymap.set('n', 'grf', '<cmd>lua vim.diagnostic.open_float()<cr>', { desc = 
 -- vim.keymap.set('n', '<leader>lu', 'zR')
 
 --Neotree Binds
-vim.keymap.set('n', '<leader>tc', '<cmd>Neotree action=focus position=left<cr> toggle=true source=filesystem', { desc = 'Open neotree at cwd' })
-vim.keymap.set('n', '<leader>tb', '<cmd>Neotree action=focus position=left<cr> toggle=true source=buffers', { desc = 'Open neotree at cwd' })
+vim.keymap.set('n', '<leader>tc', '<cmd>Neotree toggle left reveal_force_cwd<CR>', { desc = 'Open neotree at cwd' })
+vim.keymap.set('n', '<leader>tf', '<cmd>Neotree toggle current reveal_force_cwd<CR>', { desc = 'Open neotree at cwd in current buffer window' })
+vim.keymap.set('n', '<leader>tt', '<cmd>Neotree close<CR>', { desc = 'Close neotree' })
+-- vim.keymap.set('n', '<leader>t', '<cmd>Neotree action=focus toggle=true  position=left<cr> source=filesystem', { desc = 'Open neotree at cwd' })
+-- vim.keymap.set('n', '<leader>tb', '<cmd>Neotree action=focus position=left<cr> toggle=true source=buffers', { desc = 'Open neotree at cwd' })
 
-vim.keymap.set('n', '<leader>tf', function()
-  local reveal_file = vim.fn.expand '%:p'
-  if reveal_file == '' then
-    reveal_file = vim.fn.getcwd()
-  else
-    local f = io.open(reveal_file, 'r')
-    if f then
-      f.close(f)
-    else
-      reveal_file = vim.fn.getcwd()
-    end
-  end
-  require('neo-tree.command').execute {
-    action = 'focus', -- OPTIONAL, this is the default value
-    source = 'filesystem', -- OPTIONAL, this is the default value
-    position = 'left', -- OPTIONAL, this is the default value
-    reveal_file = reveal_file, -- path to file or folder to reveal
-    reveal_force_cwd = true, -- change cwd without asking if needed
-    toggle = true,
-  }
-end, { desc = 'Open neo-tree at current file or working directory' })
+-- vim.keymap.set('n', '<leader>tf', function()
+--   local reveal_file = vim.fn.expand '%:p'
+--   if reveal_file == '' then
+--     reveal_file = vim.fn.getcwd()
+--   else
+--     local f = io.open(reveal_file, 'r')
+--     if f then
+--       f.close(f)
+--     else
+--       reveal_file = vim.fn.getcwd()
+--     end
+--   end
+--   require('neo-tree.command').execute {
+--     action = 'focus', -- OPTIONAL, this is the default value
+--     source = 'filesystem', -- OPTIONAL, this is the default value
+--     position = 'left', -- OPTIONAL, this is the default value
+--     reveal_file = reveal_file, -- path to file or folder to reveal
+--     reveal_force_cwd = true, -- change cwd without asking if needed
+--     toggle = true,
+--   }
+-- end, { desc = 'Open neo-tree at current file or working directory' })
 
 --Harpoon Binds: All start with <leader>h  a:adds file m:toggles menu 1-9:quick open file at that number
 vim.keymap.set('n', '<leader>ha', function()
