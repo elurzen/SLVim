@@ -258,7 +258,21 @@ require('lazy').setup({
         }
       end
 
-      require('ufo').setup()
+      require('ufo').setup {
+        provider_selector = function(bufnr, filetype, buftype)
+          return { 'lsp' }
+        end,
+
+        --Don't auto-close folds for certain types
+        close_fold_kinds_for_ft = {
+          default = {}, --Default to not auto-closing
+        },
+
+        --Dont close folds on current line
+        close_fold_current_line_for_ft = {
+          default = false,
+        },
+      }
     end,
   },
 
@@ -307,7 +321,7 @@ require('lazy').setup({
       end, {})
 
       -- Keymap <leader>m to show messages
-      vim.keymap.set('n', '<leader>m', function()
+      vim.keymap.set('n', '<leader>mm', function()
         vim.cmd 'Messages messages'
       end, { desc = 'Show Messages Float' })
     end,
@@ -334,7 +348,7 @@ require('lazy').setup({
       -- Will use Telescope if installed or a vim.ui.select picker otherwise
       { '<leader>os', '<cmd>SessionSearch<CR>', desc = 'Session search' },
       { '<leader>ow', '<cmd>SessionSave<CR>', desc = 'Save session' },
-      { '<leader>wa', '<cmd>SessionToggleAutoSave<CR>', desc = 'Toggle autosave' },
+      { '<leader>oa', '<cmd>SessionToggleAutoSave<CR>', desc = 'Toggle autosave' },
     },
 
     ---enables autocomplete for opts
@@ -663,8 +677,12 @@ require('lazy').setup({
       -- Document existing key chains
       spec = {
         { '<leader>s', group = '[S]earch' },
-        { '<leader>t', group = '[T]oggle' },
-        { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'v' } },
+        { '<leader>y', group = '[Y]ank' },
+        { '<leader>h', group = '[H]arpoon', mode = { 'n' } },
+        { '<leader>m', group = 'Error/Diagnostic [M]essages', mode = { 'n' } },
+        { '<leader>t', group = 'Neo[t]ree', mode = { 'n' } },
+        { '<leader>d', group = '[D]ebug', mode = { 'n' } },
+        { '<leader>o', group = 'Aut[o] Session', mode = { 'n' } },
       },
     },
   },
@@ -1626,9 +1644,12 @@ vim.keymap.set('v', '<leader>y', '"+y', { desc = 'Copy to system clipboard' })
 --Scroll through Tabs Backwards (one of these can go when we figure out what we like)
 vim.keymap.set('n', '<S-Tab>', '<C-PageUp>')
 
---Go to definition binds
-vim.keymap.set('n', 'grg', '<cmd>lua vim.diagnostic.setloclist()<cr>', { desc = 'Open diagnostics list' })
-vim.keymap.set('n', 'grf', '<cmd>lua vim.diagnostic.open_float()<cr>', { desc = 'Open floating diagnostic window' })
+--Show Diagnostic Messages
+--<leader>mm shows floating message box (configured in plugin)
+vim.keymap.set('n', '<leader>md', '<cmd>lua vim.diagnostic.setloclist()<cr>', { desc = 'Open diagnostics list' })
+vim.keymap.set('n', '<leader>mf', '<cmd>lua vim.diagnostic.open_float()<cr>', { desc = 'Open floating diagnostic window' })
+
+--Show error/diagnostic binds
 
 -- -- Fold all lines containing _logger
 -- vim.keymap.set('n', '<leader>lf', function()
