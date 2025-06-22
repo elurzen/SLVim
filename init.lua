@@ -436,79 +436,121 @@ require('lazy').setup({
         port = 6006,
       }
 
-      dap.configurations.cs =
+      dap.configurations.cs = {
         {
-          {
-            type = 'coreclr',
-            name = 'Launch .NET Core App',
-            request = 'launch',
-            program = function()
-              -- Find .csproj file
-              local project_file = vim.fn.glob(vim.fn.getcwd() .. '/*.csproj')
-              if project_file == '' then
-                error 'No .csproj file found in current directory!'
-              end
+          type = 'coreclr',
+          name = 'Launch .NET Core App',
+          request = 'launch',
+          program = function()
+            -- Find .csproj file
+            local project_file = vim.fn.glob(vim.fn.getcwd() .. '/*.csproj')
+            if project_file == '' then
+              error 'No .csproj file found in current directory!'
+            end
 
-              -- Build the project
-              vim.fn.system { 'dotnet', 'build', project_file }
+            -- Build the project
+            vim.fn.system { 'dotnet', 'build', project_file }
 
-              -- Use dotnet CLI to figure out output path
-              local dll_name = vim.fn.fnamemodify(project_file, ':t:r') .. '.dll'
-              local dll_path = vim.fn.getcwd() .. '\\bin\\Debug\\net9.0\\' .. dll_name
+            -- Use dotnet CLI to figure out output path
+            local dll_name = vim.fn.fnamemodify(project_file, ':t:r') .. '.dll'
+            local dll_path = vim.fn.getcwd() .. '\\bin\\Debug\\net9.0\\' .. dll_name
 
-              if vim.fn.filereadable(dll_path) == 0 then
-                error('DLL not found: ' .. dll_path)
-              end
+            if vim.fn.filereadable(dll_path) == 0 then
+              error('DLL not found: ' .. dll_path)
+            end
 
-              local build_output = vim.fn.system { 'dotnet', 'build', project_file }
-              print(build_output)
+            local build_output = vim.fn.system { 'dotnet', 'build', project_file }
+            print(build_output)
 
-              return dll_path
-            end,
-            cwd = '${workspaceFolder}',
-            stopAtEntry = false,
-            sourceFileMap = {
-              [vim.fn.getcwd()] = vim.fn.getcwd(),
-            },
-            justMyCode = false,
-            enableStepFiltering = false,
-            -- Console configuration - output to DAP console in dapui
-            console = 'console', -- Send output to DAP console window
-            externalConsole = false, -- Don't create external console window
-            internalConsoleOptions = 'openOnSessionStart',
+            return dll_path
+          end,
+          cwd = '${workspaceFolder}',
+          stopAtEntry = false,
+          sourceFileMap = {
+            [vim.fn.getcwd()] = vim.fn.getcwd(),
           },
-
-          {
-            type = 'godot_csharp',
-            request = 'launch',
-            name = 'Launch Godot C# Project',
-            project = function()
-              -- Ensure uppercase drive letter for Windows
-              local cwd = vim.fn.getcwd()
-              return cwd:gsub('^(%l):', string.upper)
-            end,
-            launch_scene = true,
-          },
-
-          {
-            type = 'godot_csharp',
-            request = 'attach',
-            name = 'Attach to Godot C# Process',
-            project = function()
-              -- Ensure uppercase drive letter for Windows
-              local cwd = vim.fn.getcwd()
-              return cwd:gsub('^(%l):', string.upper)
-            end,
-          },
+          justMyCode = false,
+          enableStepFiltering = false,
+          -- Console configuration - output to DAP console in dapui
+          console = 'console', -- Send output to DAP console window
+          externalConsole = false, -- Don't create external console window
+          internalConsoleOptions = 'openOnSessionStart',
         },
-        -- Keymaps
-        vim.keymap.set('n', '<F5>', dap.continue, { desc = 'Start/Continue Debug' })
+
+        {
+          type = 'godot_csharp',
+          request = 'launch',
+          name = 'Launch Godot C# Project',
+          project = function()
+            -- Ensure uppercase drive letter for Windows
+            local cwd = vim.fn.getcwd()
+            return cwd:gsub('^(%l):', string.upper)
+          end,
+          launch_scene = true,
+        },
+
+        {
+          type = 'godot_csharp',
+          request = 'attach',
+          name = 'Attach to Godot C# Process',
+          project = function()
+            -- Ensure uppercase drive letter for Windows
+            local cwd = vim.fn.getcwd()
+            return cwd:gsub('^(%l):', string.upper)
+          end,
+        },
+      }
+      -- Keymaps
+      vim.keymap.set('n', '<F5>', dap.continue, { desc = 'Start/Continue Debug' })
+      vim.keymap.set('n', '<C-F5>', dap.terminate, { desc = 'Terminate Debugging Session' })
+      vim.keymap.set('n', '<C-F6>', dap.restart, { desc = 'Restart Debugging Session' })
       vim.keymap.set('n', '<F9>', dap.toggle_breakpoint, { desc = 'Toggle Breakpoint' })
       vim.keymap.set('n', '<F10>', dap.step_over, { desc = 'Step Over' })
       vim.keymap.set('n', '<F11>', dap.step_into, { desc = 'Step Into' })
       vim.keymap.set('n', '<S-F11>', dap.step_out, { desc = 'Step Out' })
       vim.keymap.set('n', '<leader>dr', dap.repl.open, { desc = 'Open REPL' })
       vim.keymap.set('n', '<leader>du', dapui.toggle, { desc = 'Toggle Debug UI' })
+      vim.keymap.set('n', '<leader>dbca', dap.clear_breakpoints, { desc = 'Clear All Breakpoints' })
+      vim.keymap.set('n', '<leader>dr', dap.run_to_cursor, { desc = 'Run to Cursor' })
+
+      -- Conditional breakpoint (stops when condition is true)
+      -- x > 10 - stops when x is greater than 10
+      -- name == "test" - stops when name equals "test"
+      -- items.Count > 0 - stops when collection has items
+      -- i % 5 == 0 - stops every 5th iteration
+      vim.keymap.set('n', '<leader>dc', function()
+        local condition = vim.fn.input 'Breakpoint condition: '
+        if condition ~= '' then
+          require('dap').set_breakpoint(condition)
+        end
+      end, { desc = 'Set conditional breakpoint' })
+
+      -- Hit condition breakpoint (stops after N hits)
+      -- 5 - stops on the 5th time this line is hit
+      -- 10 - stops on the 10th hit
+      -- >=3 - stops on 3rd hit and every hit after
+      -- %5 - stops every 5 hits (5th, 10th, 15th, etc.)
+      --
+      -- Hit condition operators:
+      --
+      -- 5 - exactly on 5th hit
+      -- >=5 - on 5th hit and beyond
+      -- %5 - every 5th hit
+      -- ==5 - only on 5th hit
+      vim.keymap.set('n', '<leader>dh', function()
+        local hit_condition = vim.fn.input 'Hit condition (e.g. "%5" for every 5th hit): '
+        if hit_condition ~= '' then
+          require('dap').set_breakpoint(nil, hit_condition)
+        end
+      end, { desc = 'Set hit condition breakpoint' })
+
+      -- Log point (breakpoint that logs instead of stopping)
+      vim.keymap.set('n', '<leader>dl', function()
+        local message = vim.fn.input 'Log message: '
+        if message ~= '' then
+          require('dap').set_breakpoint(nil, nil, message)
+        end
+      end, { desc = 'Set log point' })
     end,
   },
 
