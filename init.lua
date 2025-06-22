@@ -1573,7 +1573,7 @@ local function toggle_tokyonight_transparency()
   print('Tokyo Night Transparency: ' .. (tokyonight_transparent and 'ON' or 'OFF'))
 end
 
-vim.keymap.set('n', '<leader>o', toggle_tokyonight_transparency, { desc = 'Toggle Tokyo Night transparency' })
+vim.keymap.set('n', '<leader>`', toggle_tokyonight_transparency, { desc = 'Toggle Tokyo Night transparency' })
 --=================================== Key Binds ===================================--
 
 -- [[ Basic Keymaps ]]
