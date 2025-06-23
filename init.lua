@@ -231,6 +231,15 @@ require('lazy').setup({
   --Fugitive - allows you to use git inside of neovim
   'tpope/vim-fugitive',
 
+  { --CodeCompanion - AI code completion
+    'olimorris/codecompanion.nvim',
+    opts = {},
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+      'nvim-treesitter/nvim-treesitter',
+    },
+  },
+
   { --UFO - Better folding functionality, allows you to collapse functions and what not
     'kevinhwang91/nvim-ufo',
     dependencies = 'kevinhwang91/promise-async',
@@ -1548,32 +1557,6 @@ vim.api.nvim_create_autocmd('BufReadPost', {
   end,
 })
 
-local tokyonight_transparent = false
-local function toggle_tokyonight_transparency()
-  tokyonight_transparent = not tokyonight_transparent
-  require('tokyonight').setup {
-    style = 'storm', -- or your preferred variant
-    transparent = tokyonight_transparent,
-    styles = {
-      comments = { italic = false },
-      keywords = { italic = true },
-      functions = { italic = false },
-      variables = { italic = false },
-      types = { italic = true },
-      conditionals = { italic = false },
-      constants = { italic = false },
-      operators = { italic = false },
-      strings = { italic = false },
-      sidebars = tokyonight_transparent and 'transparent' or 'dark',
-      floats = tokyonight_transparent and 'transparent' or 'dark',
-    },
-  }
-
-  vim.cmd 'colorscheme tokyonight-storm'
-  print('Tokyo Night Transparency: ' .. (tokyonight_transparent and 'ON' or 'OFF'))
-end
-
-vim.keymap.set('n', '<leader>`', toggle_tokyonight_transparency, { desc = 'Toggle Tokyo Night transparency' })
 --=================================== Key Binds ===================================--
 
 -- [[ Basic Keymaps ]]
@@ -1620,7 +1603,8 @@ vim.keymap.set({ 'i' }, '<C-k>', '<Up>')
 vim.keymap.set({ 'i' }, '<C-l>', '<Right>')
 
 --Delete key functionality on C-l in insertmode
-vim.keymap.set({ 'i' }, '<C-e>', '<Del>')
+-- vim.keymap.set({ 'i' }, '<C-e>', '<Del>')
+-- vim.keymap.set({ 'i' }, '<C-q>', '<BS>')
 
 --Paste system clipboard: <leader>p
 vim.keymap.set('n', '<leader>p', '"+p', { desc = 'Paste system clipboard below current line' })
@@ -1704,6 +1688,34 @@ for i = 1, 9 do
     require('harpoon.ui').nav_file(i)
   end, { desc = 'Harpoon: Go to file ' .. i })
 end
+
+local tokyonight_transparent = false
+local function toggle_tokyonight_transparency()
+  tokyonight_transparent = not tokyonight_transparent
+  require('tokyonight').setup {
+    style = 'storm', -- or your preferred variant
+    transparent = tokyonight_transparent,
+    styles = {
+      comments = { italic = false },
+      keywords = { italic = true },
+      functions = { italic = false },
+      variables = { italic = false },
+      types = { italic = true },
+      conditionals = { italic = false },
+      constants = { italic = false },
+      operators = { italic = false },
+      strings = { italic = false },
+      sidebars = tokyonight_transparent and 'transparent' or 'dark',
+      floats = tokyonight_transparent and 'transparent' or 'dark',
+    },
+  }
+
+  vim.cmd 'colorscheme tokyonight-storm'
+  print('Tokyo Night Transparency: ' .. (tokyonight_transparent and 'ON' or 'OFF'))
+end
+
+vim.keymap.set('n', '<leader>`t', toggle_tokyonight_transparency, { desc = 'Toggle Tokyo Night transparency' })
+vim.keymap.set('n', '<leader>`n', '<cmd>set rnu!<CR>', { desc = 'Toggle relative line numbers' })
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
