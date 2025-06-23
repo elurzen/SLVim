@@ -692,6 +692,7 @@ require('lazy').setup({
         { '<leader>t', group = 'Neo[t]ree', mode = { 'n' } },
         { '<leader>d', group = '[D]ebug', mode = { 'n' } },
         { '<leader>o', group = 'Aut[o] Session', mode = { 'n' } },
+        { '<leader>`', group = 'Editor Settings', mode = { 'n' } },
       },
     },
   },
