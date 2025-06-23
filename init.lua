@@ -1,5 +1,4 @@
 --[[
-
 =====================================================================
 ==================== READ THIS BEFORE CONTINUING ====================
 =====================================================================
@@ -238,6 +237,23 @@ require('lazy').setup({
       'nvim-lua/plenary.nvim',
       'nvim-treesitter/nvim-treesitter',
     },
+  },
+
+  -- { --Hop - Extends jump to search results with key combos
+  --   'smoka7/hop.nvim',
+  --   version = '*',
+  --   opts = {
+  --     keys = 'etovxqpdygfblzhckisuran',
+  --   },
+  -- },
+  {
+    'ggandor/leap.nvim',
+    dependencies = { 'tpope/vim-repeat' },
+    config = function()
+      require('leap').add_default_mappings()
+      vim.keymap.set({ 'n', 'x', 'o' }, 's', '<Plug>(leap-forward)')
+      vim.keymap.set({ 'n', 'x', 'o' }, 'S', '<Plug>(leap-backward)')
+    end,
   },
 
   { --UFO - Better folding functionality, allows you to collapse functions and what not
@@ -1690,6 +1706,7 @@ for i = 1, 9 do
   end, { desc = 'Harpoon: Go to file ' .. i })
 end
 
+--Function to toggle nvim transparency
 local tokyonight_transparent = false
 local function toggle_tokyonight_transparency()
   tokyonight_transparent = not tokyonight_transparent
@@ -1715,8 +1732,25 @@ local function toggle_tokyonight_transparency()
   print('Tokyo Night Transparency: ' .. (tokyonight_transparent and 'ON' or 'OFF'))
 end
 
+--nvim modification binds
 vim.keymap.set('n', '<leader>`t', toggle_tokyonight_transparency, { desc = 'Toggle Tokyo Night transparency' })
 vim.keymap.set('n', '<leader>`n', '<cmd>set rnu!<CR>', { desc = 'Toggle relative line numbers' })
+
+-- place this in one of your configuration file(s)
+-- local hop = require 'hop'
+-- local directions = require('hop.hint').HintDirection
+-- vim.keymap.set('', 'f', function()
+--   hop.hint_char1 { direction = directions.AFTER_CURSOR, current_line_only = true }
+-- end, { remap = true })
+-- vim.keymap.set('', 'F', function()
+--   hop.hint_char1 { direction = directions.BEFORE_CURSOR, current_line_only = true }
+-- end, { remap = true })
+-- vim.keymap.set('', 't', function()
+--   hop.hint_char1 { direction = directions.AFTER_CURSOR, current_line_only = true, hint_offset = -1 }
+-- end, { remap = true })
+-- vim.keymap.set('', 'T', function()
+--   hop.hint_char1 { direction = directions.BEFORE_CURSOR, current_line_only = true, hint_offset = 1 }
+-- end, { remap = true })
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
