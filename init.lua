@@ -499,6 +499,13 @@ require('lazy').setup({
         },
       }
 
+      -- C# attach to netcoredbg
+      dap.adapters.coreclr = {
+        type = 'server',
+        host = '127.0.0.1',
+        port = 4711,
+      }
+
       --Godot C# adapter config
       dap.adapters.godot_csharp = {
         type = 'server',
@@ -547,28 +554,36 @@ require('lazy').setup({
           internalConsoleOptions = 'openOnSessionStart',
         },
 
-        {
-          type = 'godot_csharp',
-          request = 'launch',
-          name = 'Launch Godot C# Project',
-          project = function()
-            -- Ensure uppercase drive letter for Windows
-            local cwd = vim.fn.getcwd()
-            return cwd:gsub('^(%l):', string.upper)
-          end,
-          launch_scene = true,
+        { -- Config to attach to docker container via netcoredbg
+          type = 'coreclr',
+          name = 'Attach to Docker Container',
+          request = 'attach',
+          justMyCode = false,
         },
 
-        {
-          type = 'godot_csharp',
-          request = 'attach',
-          name = 'Attach to Godot C# Process',
-          project = function()
-            -- Ensure uppercase drive letter for Windows
-            local cwd = vim.fn.getcwd()
-            return cwd:gsub('^(%l):', string.upper)
-          end,
-        },
+        -- Godot debug stuff, clogging up menu, commenting out until it works
+        -- {
+        --   type = 'godot_csharp',
+        --   request = 'launch',
+        --   name = 'Launch Godot C# Project',
+        --   project = function()
+        --     -- Ensure uppercase drive letter for Windows
+        --     local cwd = vim.fn.getcwd()
+        --     return cwd:gsub('^(%l):', string.upper)
+        --   end,
+        --   launch_scene = true,
+        -- },
+        --
+        -- {
+        --   type = 'godot_csharp',
+        --   request = 'attach',
+        --   name = 'Attach to Godot C# Process',
+        --   project = function()
+        --     -- Ensure uppercase drive letter for Windows
+        --     local cwd = vim.fn.getcwd()
+        --     return cwd:gsub('^(%l):', string.upper)
+        --   end,
+        -- },
       }
       -- Keymaps
       vim.keymap.set('n', '<F5>', dap.continue, { desc = 'Start/Continue Debug' })
@@ -1196,6 +1211,11 @@ require('lazy').setup({
             },
           },
         },
+        jqls = { --jq LSP
+          filetypes = {
+            'jq',
+          },
+        },
       }
 
       -- Ensure the servers and tools above are installed
@@ -1736,21 +1756,34 @@ end
 vim.keymap.set('n', '<leader>`t', toggle_tokyonight_transparency, { desc = 'Toggle Tokyo Night transparency' })
 vim.keymap.set('n', '<leader>`n', '<cmd>set rnu!<CR>', { desc = 'Toggle relative line numbers' })
 
--- place this in one of your configuration file(s)
--- local hop = require 'hop'
--- local directions = require('hop.hint').HintDirection
--- vim.keymap.set('', 'f', function()
---   hop.hint_char1 { direction = directions.AFTER_CURSOR, current_line_only = true }
--- end, { remap = true })
--- vim.keymap.set('', 'F', function()
---   hop.hint_char1 { direction = directions.BEFORE_CURSOR, current_line_only = true }
--- end, { remap = true })
--- vim.keymap.set('', 't', function()
---   hop.hint_char1 { direction = directions.AFTER_CURSOR, current_line_only = true, hint_offset = -1 }
--- end, { remap = true })
--- vim.keymap.set('', 'T', function()
---   hop.hint_char1 { direction = directions.BEFORE_CURSOR, current_line_only = true, hint_offset = 1 }
--- end, { remap = true })
+-- Command to simulate "green button" from VS
+vim.api.nvim_create_user_command('DebugDocker', function()
+  print '🔧 Building and launching Docker Compose...'
 
+  -- Step 1: Rebuild and relaunch containers in background
+  vim.fn.jobstart('docker-compose -f docker-compose.yml -f docker-compose.override.yml up --build -d', {
+    on_stdout = function(_, data)
+      if data then
+        print(table.concat(data, '\n'))
+      end
+    end,
+    on_stderr = function(_, data)
+      if data then
+        print(table.concat(data, '\n'))
+      end
+    end,
+    on_exit = function()
+      print '🐳 Docker containers started. Waiting for debugger...'
+      -- Step 2: Wait briefly, then attach debugger
+      vim.defer_fn(function()
+        print '🐞 Attaching debugger...'
+        dap.continue()
+      end, 3000) -- Adjust delay (ms) if needed
+    end,
+  })
+end, {})
+
+-- Step 3: Bind key like F5
+vim.keymap.set('n', '<F2>', ':DebugDocker<CR>', { desc = 'Launch Docker + DAP Debugger' })
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
