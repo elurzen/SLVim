@@ -37,6 +37,7 @@ local plugin_files = {
   'mini',
   'treesitter',
   'neotree',
+  'startup',
 }
 
 -- Load each plugin file and merge into the plugins table
