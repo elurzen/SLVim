@@ -1,3 +1,22 @@
+-- Helper function to detect OS and build paths accordingly
+local function get_os_specific_paths()
+  local is_windows = vim.fn.has 'win32' == 1 or vim.fn.has 'win64' == 1
+
+  if is_windows then
+    return {
+      netcoredbg = vim.fn.stdpath 'data' .. '\\mason\\packages\\netcoredbg\\netcoredbg\\netcoredbg.exe',
+      dll_path_template = '\\bin\\Debug\\net9.0\\',
+      path_sep = '\\',
+    }
+  else
+    return {
+      netcoredbg = vim.fn.stdpath 'data' .. '/mason/packages/netcoredbg/netcoredbg',
+      dll_path_template = '/bin/Debug/net9.0/',
+      path_sep = '/',
+    }
+  end
+end
+
 --DAP (debugger) specifically for c# console applications
 return {
   {
@@ -10,6 +29,7 @@ return {
     config = function()
       local dap = require 'dap'
       local dapui = require 'dapui'
+      local paths = get_os_specific_paths()
       dap.set_log_level 'DEBUG'
 
       -- Setup UI
@@ -70,7 +90,8 @@ return {
       -- C# adapter config
       dap.adapters.coreclr = {
         type = 'executable',
-        command = vim.fn.stdpath 'data' .. '\\mason\\packages\\netcoredbg\\netcoredbg\\netcoredbg.exe',
+        --Value assigned in function at top of config
+        command = paths.netcoredbg,
         args = { '--interpreter=vscode' },
         options = {
           detached = false,
@@ -94,7 +115,7 @@ return {
 
             -- Use dotnet CLI to figure out output path
             local dll_name = vim.fn.fnamemodify(project_file, ':t:r') .. '.dll'
-            local dll_path = vim.fn.getcwd() .. '\\bin\\Debug\\net9.0\\' .. dll_name
+            local dll_path = vim.fn.getcwd() .. paths.dll_path_template .. dll_name
 
             if vim.fn.filereadable(dll_path) == 0 then
               error('DLL not found: ' .. dll_path)
