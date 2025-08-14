@@ -275,6 +275,7 @@ return {
             'vue',
             'svelte',
           },
+
           settings = {
             tailwindCSS = {
               classAttributes = { 'class', 'className', 'classList', 'ngClass' },
@@ -289,6 +290,10 @@ return {
               },
               validate = true,
             },
+          },
+
+          terraformls = { -- Terraform LSP
+            filetypes = { 'terraform' },
           },
         },
       }
