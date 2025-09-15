@@ -50,6 +50,7 @@ return {
         { '<leader>y', group = '[Y]ank' },
         { '<leader>h', group = '[H]arpoon', mode = { 'n' } },
         { '<leader>m', group = 'Error/Diagnostic [M]essages', mode = { 'n' } },
+        { '<leader>n', group = '[N]eotest', mode = { 'n' } },
         { '<leader>t', group = 'Neo[t]ree', mode = { 'n' } },
         { '<leader>d', group = '[D]ebug', mode = { 'n' } },
         { '<leader>o', group = 'Aut[o] Session', mode = { 'n' } },

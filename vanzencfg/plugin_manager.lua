@@ -22,6 +22,7 @@ local plugin_files = {
   'leap',
   'ufo',
   'markdown',
+  'neotest',
   'gitsigns',
   'messages',
   'auto_session',
