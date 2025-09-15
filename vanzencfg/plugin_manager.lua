@@ -20,6 +20,7 @@ local plugin_files = {
   'code_companion',
   'leap',
   'ufo',
+  'markdown',
   'gitsigns',
   'messages',
   'auto_session',
