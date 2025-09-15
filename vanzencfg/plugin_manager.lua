@@ -16,6 +16,7 @@ local plugins = {}
 local plugin_files = {
   'guess_indent',
   'harpoon',
+  'autopairs',
   'vim_fugitive',
   'code_companion',
   'leap',
