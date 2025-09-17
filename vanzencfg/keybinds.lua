@@ -55,7 +55,7 @@ vim.keymap.set('n', '<S-Tab>', '<C-PageUp>')
 vim.keymap.set('n', '<leader>md', '<cmd>lua vim.diagnostic.setloclist()<cr>', { desc = 'Open diagnostics list' })
 vim.keymap.set('n', '<leader>mf', '<cmd>lua vim.diagnostic.open_float()<cr>', { desc = 'Open floating diagnostic window' })
 
-vim.keymap.set('n', '<leader>`n', '<cmd>set rnu!<CR>', { desc = 'Toggle relative line numbers' })
+-- vim.keymap.set('n', '<leader>`n', '<cmd>set rnu!<CR>', { desc = 'Toggle relative line numbers' })
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et

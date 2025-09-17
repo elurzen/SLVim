@@ -295,6 +295,10 @@ return {
           terraformls = { -- Terraform LSP
             filetypes = { 'terraform' },
           },
+
+          bashls = {
+            filetypes = { 'Bash', 'Csh', 'Ksh', 'Sh', 'Zsh' },
+          },
         },
       }
 
