@@ -17,6 +17,7 @@ local plugin_files = {
   'guess_indent',
   'harpoon',
   'autopairs',
+  'ts_autotag',
   'vim_fugitive',
   'code_companion',
   'leap',
