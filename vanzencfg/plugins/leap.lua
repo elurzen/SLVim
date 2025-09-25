@@ -5,8 +5,11 @@ return {
     dependencies = { 'tpope/vim-repeat' },
     config = function()
       require('leap').add_default_mappings()
-      vim.keymap.set({ 'n', 'x', 'o' }, 's', '<Plug>(leap-forward)')
-      vim.keymap.set({ 'n', 'x', 'o' }, 'S', '<Plug>(leap-backward)')
+      vim.keymap.del({ 'n', 'x', 'o' }, 's')
+      vim.keymap.del({ 'n', 'x', 'o' }, 'S')
+
+      vim.keymap.set({ 'n', 'x', 'o' }, '<leader>j', '<Plug>(leap-forward)')
+      vim.keymap.set({ 'n', 'x', 'o' }, '<leader>k', '<Plug>(leap-backward)')
     end,
   },
 }
