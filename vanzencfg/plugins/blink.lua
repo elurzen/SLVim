@@ -58,7 +58,7 @@ return {
         -- <c-k>: Toggle signature help
         --
         -- See :h blink-cmp-config-keymap for defining your own keymap
-        preset = 'super-tab',
+        preset = 'default',
         ['<c-e>'] = { 'show', 'hide' },
         ['<c-k>'] = {}, --disable original toggle documentation binding - conflict with i navigation
         ['<c-d>'] = { 'show_documentation', 'hide_documentation' },
