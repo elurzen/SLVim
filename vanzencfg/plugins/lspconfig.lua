@@ -302,6 +302,9 @@ return {
 
           clangd = {
             cmd = { 'clangd', '--background-index' },
+            init_options = {
+              fallbackFlags = { '-target', 'avr' },
+            },
             -- If you ever see encoding warnings, uncomment:
             -- capabilities = { offsetEncoding = { "utf-16" } },
           },
