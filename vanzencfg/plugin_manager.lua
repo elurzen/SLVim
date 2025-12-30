@@ -42,6 +42,7 @@ local plugin_files = {
   'treesitter',
   'neotree',
   'startup',
+  'arduino',
 }
 
 -- Load each plugin file and merge into the plugins table

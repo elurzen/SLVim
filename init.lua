@@ -9,6 +9,7 @@ package.path = config .. '/?.lua;' .. config .. '/?/init.lua;'
 
 local modules = {
   'vanzencfg.nvim_options',
+  'vanzencfg.filetypes',
   'vanzencfg.keybinds',
   'vanzencfg.plugin_manager',
   'vanzencfg.autocmds',

@@ -299,6 +299,12 @@ return {
           bashls = {
             filetypes = { 'Bash', 'Csh', 'Ksh', 'Sh', 'Zsh' },
           },
+
+          clangd = {
+            cmd = { 'clangd', '--background-index' },
+            -- If you ever see encoding warnings, uncomment:
+            -- capabilities = { offsetEncoding = { "utf-16" } },
+          },
         },
       }
 
