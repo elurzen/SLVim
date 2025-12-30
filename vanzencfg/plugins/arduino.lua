@@ -66,6 +66,7 @@ end
 -- ONE reusable Arduino terminal window (max one split)
 -- Robust against window closures / layout changes / tabpages.
 -- Creates a fresh terminal buffer per run.
+-- NEVER steals focus or puts you into insert mode.
 -- ============================================================
 
 local ArduinoTerm = {
@@ -95,7 +96,7 @@ local function ensure_term_win()
     end
   end
 
-  -- Otherwise create bottom split in the current tab
+  -- Otherwise create bottom split in the current tab (but do not keep focus)
   local prev = vim.api.nvim_get_current_win()
   vim.cmd 'botright 14split'
   local win = vim.api.nvim_get_current_win()
@@ -117,8 +118,12 @@ local function wipe_buf(buf)
   end
 end
 
-local function term_run(cmd, cwd)
-  local prev = vim.api.nvim_get_current_win()
+-- focus_terminal: if true, jump to terminal and enter insert
+-- if false, run in terminal but keep user exactly where they were
+local function term_run(cmd, cwd, focus_terminal)
+  local prev_win = vim.api.nvim_get_current_win()
+  local prev_mode = vim.api.nvim_get_mode().mode
+
   local win = ensure_term_win()
 
   -- If the stored window is valid but not in this tab, create a new one in this tab
@@ -149,16 +154,29 @@ local function term_run(cmd, cwd)
     pcall(vim.api.nvim_win_set_buf, win, buf)
   end
 
-  -- Run terminal job without relying on global current-win state
+  -- Run terminal job in that window, but don't force insert unless asked
   vim.api.nvim_win_call(win, function()
     pcall(vim.api.nvim_buf_set_name, buf, 'Arduino://terminal')
     vim.fn.termopen(cmd, { cwd = cwd })
-    vim.cmd 'startinsert'
+    if focus_terminal then
+      vim.cmd 'startinsert'
+    end
   end)
 
-  -- Return focus to original window (comment out if you prefer staying in terminal)
-  if prev and vim.api.nvim_win_is_valid(prev) then
-    vim.api.nvim_set_current_win(prev)
+  if focus_terminal then
+    -- If caller wants focus, go there (and insert already started)
+    vim.api.nvim_set_current_win(win)
+    return
+  end
+
+  -- Otherwise: restore exact focus + mode
+  if prev_win and vim.api.nvim_win_is_valid(prev_win) then
+    vim.api.nvim_set_current_win(prev_win)
+  end
+
+  -- Ensure we don't end up in insert mode after mapping
+  if prev_mode:sub(1, 1) == 'n' then
+    vim.cmd 'stopinsert'
   end
 end
 
@@ -166,7 +184,7 @@ end
 -- Arduino runners
 -- ============================================================
 
-local function run_arduino_cli(args_fn)
+local function run_arduino_cli(args_fn, focus_terminal)
   local root, cfg, err = get_cfg()
   if err then
     notify_err(err)
@@ -176,10 +194,10 @@ local function run_arduino_cli(args_fn)
   local cmd = { 'arduino-cli' }
   vim.list_extend(cmd, args_fn(cfg))
 
-  term_run(cmd, root)
+  term_run(cmd, root, focus_terminal)
 end
 
-local function run_pwsh_script(script_rel, args_fn)
+local function run_pwsh_script(script_rel, args_fn, focus_terminal)
   local root, cfg, err = get_cfg()
   if err then
     notify_err(err)
@@ -195,7 +213,7 @@ local function run_pwsh_script(script_rel, args_fn)
   local cmd = { 'powershell', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', script_path }
   vim.list_extend(cmd, args_fn(cfg))
 
-  term_run(cmd, root)
+  term_run(cmd, root, focus_terminal)
 end
 
 local function lsp_restart_clangd()
@@ -221,10 +239,11 @@ return {
     'nvim-lua/plenary.nvim',
     lazy = true,
     init = function()
+      -- NOTE: All leader commands run WITHOUT stealing focus or entering insert mode.
       vim.api.nvim_create_user_command('ArduinoGenFlags', function()
         run_pwsh_script('tools/gen_compile_flags.ps1', function(cfg)
           return { '-SketchPath', ('.\\' .. cfg.sketch), '-FQBN', cfg.fqbn }
-        end)
+        end, false)
         vim.defer_fn(lsp_restart_clangd, 300)
       end, {})
 
@@ -232,20 +251,21 @@ return {
         vim.cmd 'ArduinoGenFlags'
         run_arduino_cli(function(cfg)
           return { 'compile', '--fqbn', cfg.fqbn, cfg.sketch }
-        end)
+        end, false)
       end, {})
 
       vim.api.nvim_create_user_command('ArduinoUpload', function()
         vim.cmd 'ArduinoGenFlags'
         run_arduino_cli(function(cfg)
           return { 'upload', '--fqbn', cfg.fqbn, '-p', cfg.port, cfg.sketch }
-        end)
+        end, false)
       end, {})
 
       vim.api.nvim_create_user_command('ArduinoMonitor', function()
+        -- Monitor is the one you usually WANT focus for; keep it false if you prefer.
         run_arduino_cli(function(cfg)
           return { 'monitor', '--port', cfg.port, '--config', ('baudrate=%d'):format(cfg.baud) }
-        end)
+        end, false)
       end, {})
 
       vim.api.nvim_create_user_command('ArduinoTerm', function()
@@ -263,7 +283,7 @@ return {
       vim.keymap.set('n', '<leader>ac', '<cmd>ArduinoCompile<CR>', { desc = 'Arduino Compile (Mega)' })
       vim.keymap.set('n', '<leader>au', '<cmd>ArduinoUpload<CR>', { desc = 'Arduino Upload (Mega)' })
       vim.keymap.set('n', '<leader>am', '<cmd>ArduinoMonitor<CR>', { desc = 'Arduino Monitor' })
-      vim.keymap.set('n', '<leader>at', '<cmd>ArduinoTerm<CR>', { desc = 'Arduino Terminal' })
+      vim.keymap.set('n', '<leader>at', '<cmd>ArduinoTerm<CR>', { desc = 'Arduino Terminal (focus)' })
     end,
   },
 }
