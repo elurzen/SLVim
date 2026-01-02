@@ -25,6 +25,8 @@ return {
       'rcarriga/nvim-dap-ui',
       'theHamsta/nvim-dap-virtual-text',
       'nvim-neotest/nvim-nio',
+
+      'mfussenegger/nvim-dap-python',
     },
     config = function()
       local dap = require 'dap'
@@ -90,7 +92,6 @@ return {
       -- C# adapter config
       dap.adapters.coreclr = {
         type = 'executable',
-        --Value assigned in function at top of config
         command = paths.netcoredbg,
         args = { '--interpreter=vscode' },
         options = {
@@ -139,6 +140,28 @@ return {
           internalConsoleOptions = 'openOnSessionStart',
         },
       }
+
+      -- Python
+      local py = require 'dap-python'
+      local debugpy_python = vim.fn.stdpath 'data' .. '/mason/packages/debugpy/venv/bin/python'
+      if vim.fn.has 'win32' == 1 or vim.fn.has 'win64' == 1 then
+        debugpy_python = vim.fn.stdpath 'data' .. '\\mason\\packages\\debugpy\\venv\\Scripts\\python.exe'
+      end
+
+      py.setup(debugpy_python)
+      py.test_runner = 'pytest'
+
+      dap.configurations.python = dap.configurations.python or {}
+      table.insert(dap.configurations.python, {
+        type = 'python',
+        request = 'launch',
+        name = 'Python: Current file',
+        program = '${file}',
+        cwd = '${workspaceFolder}',
+        console = 'integratedTerminal',
+        justMyCode = false,
+      })
+
       -- Keymaps
       vim.keymap.set('n', '<F5>', dap.continue, { desc = 'Start/Continue Debug' })
       vim.keymap.set('n', '<C-F5>', dap.terminate, { desc = 'Terminate Debugging Session' })
@@ -190,6 +213,13 @@ return {
           require('dap').set_breakpoint(nil, nil, message)
         end
       end, { desc = 'Set log point' })
+
+      vim.keymap.set('n', '<leader>dpm', function()
+        py.test_method()
+      end, { desc = 'Debug Python test (method)' })
+      vim.keymap.set('n', '<leader>dpc', function()
+        py.test_class()
+      end, { desc = 'Debug Python test (class)' })
     end,
   },
 }
