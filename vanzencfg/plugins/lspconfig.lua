@@ -232,6 +232,8 @@ return {
           },
         },
 
+        basedpyright = {},
+
         lua_ls = {
           -- cmd = { ... },
           -- filetypes = { ... },

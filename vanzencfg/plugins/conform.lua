@@ -33,6 +33,7 @@ return {
       formatters_by_ft = {
         lua = { 'stylua' },
         cs = { 'csharpier' }, -- Add C# formatting support
+        python = { 'ruff' },
         -- Conform can also run multiple formatters sequentially
         -- python = { "isort", "black" },
         --
