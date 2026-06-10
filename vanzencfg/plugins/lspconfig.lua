@@ -188,8 +188,10 @@ return {
         --
 
         omnisharp = {
-          cmd = { 'dotnet', vim.fn.stdpath 'data' .. '/mason/packages/omnisharp/libexec/OmniSharp.dll' },
-          enable_roslyn_analyzers = true,
+          -- cmd = { 'dotnet', vim.fn.stdpath 'data' .. '/mason/packages/omnisharp/libexec/OmniSharp.dll' },
+          cmd = { vim.fn.stdpath 'data' .. '/mason/bin/omnisharp' },
+          enable_roslyn_analyzers = true, --trying this off
+          -- enable_roslyn_analyzers = false,
           organize_imports_on_format = true,
           enable_import_completion = true,
           settings = {
@@ -230,6 +232,10 @@ return {
               IncludePrereleases = true,
             },
           },
+        },
+
+        basedpyright = {
+          settings = {},
         },
 
         lua_ls = {
@@ -298,6 +304,10 @@ return {
 
           bashls = {
             filetypes = { 'Bash', 'Csh', 'Ksh', 'Sh', 'Zsh' },
+          },
+
+          powershell_es = {
+            -- filetypes = { 'ps1' },
           },
         },
       }

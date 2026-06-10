@@ -57,5 +57,9 @@ vim.keymap.set('n', '<leader>mf', '<cmd>lua vim.diagnostic.open_float()<cr>', { 
 
 -- vim.keymap.set('n', '<leader>`n', '<cmd>set rnu!<CR>', { desc = 'Toggle relative line numbers' })
 
+-- Remove default s functionality for mini.surround
+vim.keymap.set({ 'n', 'x' }, 's', '<Nop>')
+vim.keymap.set({ 'n', 'x' }, 'S', '<Nop>')
+
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et

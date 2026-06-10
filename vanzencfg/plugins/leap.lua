@@ -4,9 +4,7 @@ return {
     'ggandor/leap.nvim',
     dependencies = { 'tpope/vim-repeat' },
     config = function()
-      require('leap').add_default_mappings()
-      vim.keymap.del({ 'n', 'x', 'o' }, 's')
-      vim.keymap.del({ 'n', 'x', 'o' }, 'S')
+      require 'leap' --.add_default_mappings()
 
       vim.keymap.set({ 'n', 'x', 'o' }, '<leader>j', '<Plug>(leap-forward)')
       vim.keymap.set({ 'n', 'x', 'o' }, '<leader>k', '<Plug>(leap-backward)')
