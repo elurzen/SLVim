@@ -77,16 +77,22 @@ if vim.fn.has 'win32' == 1 then
   vim.o.shellxquote = ''
 end
 
--- WSL has no native clipboard tool, so route the system clipboard through the
--- terminal via OSC 52. Needs `set -g set-clipboard on` in tmux. Copy is reliable;
--- paste-from-Windows depends on the terminal's OSC 52 read support, otherwise use
--- the terminal's own paste. (`"+y` / `"+p`; not forced onto the unnamed register.)
-if vim.fn.has 'wsl' == 1 then
-  local osc52 = require 'vim.ui.clipboard.osc52'
+-- WSL has no native clipboard tool, so bridge to the Windows clipboard via interop:
+--   copy  -> clip.exe (reads stdin)
+--   paste -> PowerShell Get-Clipboard, with the trailing CRLF normalized to LF
+-- Full paths because appendWindowsPath=false keeps Windows exes off PATH. List
+-- forms (not shell strings) so PowerShell's `r`n backticks aren't eaten by zsh.
+-- cache_enabled=0 so paste always reads the live Windows clipboard. Drives the
+-- explicit "+ mappings (<leader>y / <leader>yy / <leader>p); plain y stays local.
+local clip = '/mnt/c/Windows/System32/clip.exe'
+local pwsh = '/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe'
+if vim.fn.has 'wsl' == 1 and vim.fn.executable(clip) == 1 then
+  local paste = { pwsh, '-NoProfile', '-NoLogo', '-Command', [[[Console]::Out.Write($(Get-Clipboard -Raw).tostring().replace("`r`n","`n"))]] }
   vim.g.clipboard = {
-    name = 'OSC 52',
-    copy = { ['+'] = osc52.copy '+', ['*'] = osc52.copy '*' },
-    paste = { ['+'] = osc52.paste '+', ['*'] = osc52.paste '*' },
+    name = 'wsl-clip.exe',
+    copy = { ['+'] = { clip }, ['*'] = { clip } },
+    paste = { ['+'] = paste, ['*'] = paste },
+    cache_enabled = 0,
   }
 end
 
