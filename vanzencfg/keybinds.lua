@@ -44,7 +44,8 @@ vim.keymap.set('n', '<leader>p', '"+p', { desc = 'Paste system clipboard below c
 vim.keymap.set('v', '<leader>p', '"+p', { desc = 'Paste system clipboard' })
 
 --Copy to system clipboard
-vim.keymap.set('n', '<leader>yy', '"+yy', { desc = 'Copy to system clipboard' })
+vim.keymap.set('n', '<leader>y', '"+y', { desc = 'Copy to system clipboard (operator, e.g. <leader>yiw)' })
+vim.keymap.set('n', '<leader>yy', '"+yy', { desc = 'Copy line to system clipboard' })
 vim.keymap.set('v', '<leader>y', '"+y', { desc = 'Copy to system clipboard' })
 
 --Scroll through Tabs Backwards (one of these can go when we figure out what we like)
