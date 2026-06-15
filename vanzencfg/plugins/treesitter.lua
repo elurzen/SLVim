@@ -2,6 +2,9 @@
 return {
   {
     'nvim-treesitter/nvim-treesitter',
+    -- Pin the legacy `master` branch: the new `main` rewrite dropped the
+    -- `nvim-treesitter.configs` module this config's `main`/`opts` setup uses.
+    branch = 'master',
     build = ':TSUpdate',
     main = 'nvim-treesitter.configs', -- Sets main module to use for opts
     -- [[ Configure Treesitter ]] See `:help nvim-treesitter`

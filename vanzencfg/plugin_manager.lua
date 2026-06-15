@@ -35,7 +35,7 @@ local plugin_files = {
   'indent_blankline',
   'which_key',
   'telescope',
-  -- 'lspconfig',
+  'lspconfig',
   'conform',
   'blink',
   'tokyonight',

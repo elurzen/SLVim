@@ -64,19 +64,32 @@ vim.o.scrolloff = 10
 -- See `:help 'confirm'`
 vim.o.confirm = true
 
-vim.o.shell = 'powershell'
-vim.o.shellcmdflag =
-  '-NoLogo -NoProfile -ExecutionPolicy RemoteSigned -Command [Console]::InputEncoding=[Console]::OutputEncoding=[System.Text.Encoding]::UTF8;'
-vim.o.shellredir = '2>&1 | Out-File -Encoding UTF8 %s; exit $LastExitCode'
-vim.o.shellpipe = '2>&1 | Out-File -Encoding UTF8 %s; exit $LastExitCode'
-vim.o.shellquote = ''
-vim.o.shellxquote = ''
+-- Windows only: drive `:!`, `:terminal`, system() through PowerShell.
+-- On WSL/Linux there is no `powershell` on PATH, so leave the default ($SHELL),
+-- otherwise every shell-out (terminal, formatters, git helpers) would break.
+if vim.fn.has 'win32' == 1 then
+  vim.o.shell = 'powershell'
+  vim.o.shellcmdflag =
+    '-NoLogo -NoProfile -ExecutionPolicy RemoteSigned -Command [Console]::InputEncoding=[Console]::OutputEncoding=[System.Text.Encoding]::UTF8;'
+  vim.o.shellredir = '2>&1 | Out-File -Encoding UTF8 %s; exit $LastExitCode'
+  vim.o.shellpipe = '2>&1 | Out-File -Encoding UTF8 %s; exit $LastExitCode'
+  vim.o.shellquote = ''
+  vim.o.shellxquote = ''
+end
+
+-- WSL has no native clipboard tool, so route the system clipboard through the
+-- terminal via OSC 52. Needs `set -g set-clipboard on` in tmux. Copy is reliable;
+-- paste-from-Windows depends on the terminal's OSC 52 read support, otherwise use
+-- the terminal's own paste. (`"+y` / `"+p`; not forced onto the unnamed register.)
+if vim.fn.has 'wsl' == 1 then
+  local osc52 = require 'vim.ui.clipboard.osc52'
+  vim.g.clipboard = {
+    name = 'OSC 52',
+    copy = { ['+'] = osc52.copy '+', ['*'] = osc52.copy '*' },
+    paste = { ['+'] = osc52.paste '+', ['*'] = osc52.paste '*' },
+  }
+end
 
 -- Highlight when yanking (copying) text
 --  Try it with `yap` in normal mode
 --  See `:help vim.hl.on_yank()`
-
----@type vim.Option
-local lazypath = vim.fn.stdpath 'data' .. 'lazy/lazy.nvim'
-local rtp = vim.opt.rtp
-rtp:prepend(lazypath)

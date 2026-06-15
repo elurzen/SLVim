@@ -116,16 +116,6 @@ return {
             end, '[T]oggle Inlay [H]ints')
           end
 
-          --Keybind overrides for omnisharp LSP [uses omnisharp extended plugin]
-          --provides better support for 'GOTO' functions
-          if client and client.name == 'omnisharp' then
-            local omnisharp_extended = require 'omnisharp_extended'
-            -- Override the default telescope ones with omnisharp-extended versions
-            map('grd', omnisharp_extended.telescope_lsp_definitions, '[G]oto [D]efinition')
-            map('grr', omnisharp_extended.telescope_lsp_references, '[G]oto [R]eferences')
-            map('gri', omnisharp_extended.telescope_lsp_implementation, '[G]oto [I]mplementation')
-            map('grt', omnisharp_extended.telescope_lsp_type_definition, '[G]oto [T]ype Definition')
-          end
         end,
       })
 
@@ -173,143 +163,26 @@ return {
       --  - capabilities (table): Override fields in capabilities. Can be used to disable certain LSP features.
       --  - settings (table): Override the default settings passed when initializing the server.
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
+      -- Lightweight/work server set: only what actually gets edited on WSL.
+      -- Deliberately NO omnisharp (it indexes the whole EMPACT solution and is the
+      -- slow path we're avoiding) and no ts_ls/cssls/tailwindcss (that work happens
+      -- in VSCode on Windows). These all attach per-file and stay fast.
       local servers = {
-        -- clangd = {},
-        -- gopls = {},
-        -- pyright = {},
-        -- rust_analyzer = {},
-        -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
-        --
-        -- Some languages (like typescript) have entire language plugins that can be useful:
-        --    https://github.com/pmizio/typescript-tools.nvim
-        --
-        -- But for many setups, the LSP (`ts_ls`) will work just fine
-        -- ts_ls = {},
-        --
-
-        omnisharp = {
-          -- cmd = { 'dotnet', vim.fn.stdpath 'data' .. '/mason/packages/omnisharp/libexec/OmniSharp.dll' },
-          cmd = { vim.fn.stdpath 'data' .. '/mason/bin/omnisharp' },
-          enable_roslyn_analyzers = true, --trying this off
-          -- enable_roslyn_analyzers = false,
-          organize_imports_on_format = true,
-          enable_import_completion = true,
-          settings = {
-            FormattingOptions = {
-              -- Enables support for reading code style, naming convention and analyzer
-              -- settings from .editorconfig.
-              EnableEditorConfigSupport = true,
-              -- Specifies whether 'using' directives should be grouped and sorted during
-              -- document formatting.
-              OrganizeImports = true,
-            },
-            MsBuild = {
-              -- If true, MSBuild project system will only load projects for files that
-              -- were opened in the editor. This setting is useful for big C# codebases
-              -- and allows for faster initialization of code navigation features only
-              -- for projects that are relevant to code that is being edited. With this
-              -- setting enabled OmniSharp may load fewer projects and may thus display
-              -- incomplete reference lists for symbols.
-              LoadProjectsOnDemand = nil,
-            },
-            RoslynExtensionsOptions = {
-              -- Enables support for roslyn analyzers, code fixes and rulesets.
-              EnableAnalyzersSupport = true,
-              -- Enables support for showing unimported types and unimported extension
-              -- methods in completion lists. When committed, the appropriate using
-              -- directive will be added at the top of the current file. This option can
-              -- have a negative impact on initial completion responsiveness,
-              -- particularly for the first few completion sessions after opening a
-              -- solution.
-              EnableImportCompletion = true,
-              -- Only run analyzers against open files when 'enableRoslynAnalyzers' is
-              -- true
-              AnalyzeOpenDocumentsOnly = nil,
-            },
-            Sdk = {
-              -- Specifies whether to include preview versions of the .NET SDK when
-              -- determining which version to use for project loading.
-              IncludePrereleases = true,
-            },
-          },
-        },
-
-        basedpyright = {
-          settings = {},
-        },
-
         lua_ls = {
-          -- cmd = { ... },
-          -- filetypes = { ... },
-          -- capabilities = {},
           settings = {
             Lua = {
               completion = {
                 callSnippet = 'Replace',
               },
-              -- You can toggle below to ignore Lua_LS's noisy `missing-fields` warnings
+              -- Toggle to silence Lua_LS's noisy `missing-fields` warnings:
               -- diagnostics = { disable = { 'missing-fields' } },
             },
           },
         },
-
-        superhtml = { --HTML LSP
-          filetypes = {
-            'html',
-            'shtml',
-            'htm',
-          },
-        },
-
-        ts_ls = { --Typescript LSP (for both typescript and javascript)
-          filetypes = { 'javascript', 'javascriptreact', 'typescript', 'typescriptreact' },
-        },
-
-        cssls = { -- CSS LSP
-          filetypes = { 'css', 'scss', 'less' },
-        },
-
-        tailwindcss = { --Tailwind LSP (CSS)
-          filetypes = {
-            'html',
-            'css',
-            'scss',
-            'javascript',
-            'javascriptreact',
-            'typescript',
-            'typescriptreact',
-            'vue',
-            'svelte',
-          },
-
-          settings = {
-            tailwindCSS = {
-              classAttributes = { 'class', 'className', 'classList', 'ngClass' },
-              lint = {
-                cssConflict = 'warning',
-                invalidApply = 'error',
-                invalidConfigPath = 'error',
-                invalidScreen = 'error',
-                invalidTailwindDirective = 'error',
-                invalidVariant = 'error',
-                recommendedVariantOrder = 'warning',
-              },
-              validate = true,
-            },
-          },
-
-          terraformls = { -- Terraform LSP
-            filetypes = { 'terraform' },
-          },
-
-          bashls = {
-            filetypes = { 'Bash', 'Csh', 'Ksh', 'Sh', 'Zsh' },
-          },
-
-          powershell_es = {
-            -- filetypes = { 'ps1' },
-          },
-        },
+        bashls = {},
+        jsonls = {},
+        yamlls = {},
+        terraformls = {},
       }
 
       -- Ensure the servers and tools above are installed
@@ -328,8 +201,6 @@ return {
       local ensure_installed = vim.tbl_keys(servers or {})
       vim.list_extend(ensure_installed, {
         'stylua', -- Used to format Lua code
-        'omnisharp', -- C# language server
-        'csharpier', -- C# formatter (optional)
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
