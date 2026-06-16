@@ -77,21 +77,19 @@ if vim.fn.has 'win32' == 1 then
   vim.o.shellxquote = ''
 end
 
--- WSL has no native clipboard tool, so bridge to the Windows clipboard via interop:
---   copy  -> clip.exe (reads stdin)
---   paste -> PowerShell Get-Clipboard, with the trailing CRLF normalized to LF
--- Full paths because appendWindowsPath=false keeps Windows exes off PATH. List
--- forms (not shell strings) so PowerShell's `r`n backticks aren't eaten by zsh.
+-- WSL has no native clipboard tool, so bridge to the Windows clipboard via
+-- win32yank (in ~/.local/bin, on PATH). It does both copy and paste, is UTF-8
+-- clean, and avoids OSC 52 (which intermittently freezes tmux's single-threaded
+-- server while Windows Terminal acquires the clipboard lock) as well as the
+-- PowerShell startup latency the old clip.exe + Get-Clipboard pair paid on every
+-- paste. --crlf normalizes LF->CRLF going out, --lf strips CRLF->LF coming back.
 -- cache_enabled=0 so paste always reads the live Windows clipboard. Drives the
 -- explicit "+ mappings (<leader>y / <leader>yy / <leader>p); plain y stays local.
-local clip = '/mnt/c/Windows/System32/clip.exe'
-local pwsh = '/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe'
-if vim.fn.has 'wsl' == 1 and vim.fn.executable(clip) == 1 then
-  local paste = { pwsh, '-NoProfile', '-NoLogo', '-Command', [[[Console]::Out.Write($(Get-Clipboard -Raw).tostring().replace("`r`n","`n"))]] }
+if vim.fn.has 'wsl' == 1 and vim.fn.executable 'win32yank.exe' == 1 then
   vim.g.clipboard = {
-    name = 'wsl-clip.exe',
-    copy = { ['+'] = { clip }, ['*'] = { clip } },
-    paste = { ['+'] = paste, ['*'] = paste },
+    name = 'win32yank',
+    copy = { ['+'] = 'win32yank.exe -i --crlf', ['*'] = 'win32yank.exe -i --crlf' },
+    paste = { ['+'] = 'win32yank.exe -o --lf', ['*'] = 'win32yank.exe -o --lf' },
     cache_enabled = 0,
   }
 end
