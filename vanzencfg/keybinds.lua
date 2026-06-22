@@ -48,6 +48,12 @@ vim.keymap.set('n', '<leader>y', '"+y', { desc = 'Copy to system clipboard (oper
 vim.keymap.set('n', '<leader>yy', '"+yy', { desc = 'Copy line to system clipboard' })
 vim.keymap.set('v', '<leader>y', '"+y', { desc = 'Copy to system clipboard' })
 
+-- Swap jumplist navigation: i = back (older), o = forward (newer).
+-- Defaults are the reverse (<C-o> back, <C-i> forward). noremap keeps the RHS as the builtins.
+-- NOTE: in a terminal <C-i> == <Tab>, so normal-mode <Tab> now jumps back too (no other Tab binding here).
+vim.keymap.set('n', '<C-i>', '<C-o>', { desc = 'Jump back in jumplist (swapped: i = back)' })
+vim.keymap.set('n', '<C-o>', '<C-i>', { desc = 'Jump forward in jumplist (swapped: o = forward)' })
+
 --Scroll through Tabs Backwards (one of these can go when we figure out what we like)
 vim.keymap.set('n', '<S-Tab>', '<C-PageUp>')
 
